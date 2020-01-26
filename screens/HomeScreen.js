@@ -8,191 +8,260 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  TouchableHighlight,
 } from 'react-native';
+
+
+import CoinCard from '../components/CoinCard';
 
 import { MonoText } from '../components/StyledText';
 
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}>
-        <View style={styles.welcomeContainer}>
-          <Image
-            source={
-              __DEV__
-                ? require('../assets/images/robot-dev.png')
-                : require('../assets/images/robot-prod.png')
-            }
-            style={styles.welcomeImage}
+// coinmarket global API: https://api.coinmarketcap.com/v1/global/
+
+
+export default class HomeScreen extends React.Component {
+
+  constructor(props){
+    super(props);
+    this.state ={
+      isLoading: true,
+      refreshing: false,
+      globalIsLoaded: false,
+    }
+  };
+
+  _onRefresh = () => {
+    this.setState({refreshing: true});
+    fetch('https://api.coinmarketcap.com/v1/ticker/')
+    .then((response) => response.json())
+    .then((responseJson) => {
+
+      this.setState({
+        dataSource: responseJson,
+        refreshing: false
+      }, function(){
+
+      });
+
+    })
+    .catch((error) =>{
+      console.error(error);
+    });
+  }
+
+
+ componentDidMount(){
+
+  this.getCryptos()
+  this.globalStats()
+  // funktioniert:
+  // this.timer = setInterval(()=> this.getCryptos(), 5000)
+
+  // return fetch('https://api.coinmarketcap.com/v1/ticker/')
+  //   .then((response) => response.json())
+  //   .then((responseJson) => {
+
+  //     this.setState({
+  //       isLoading: false,
+  //       dataSource: responseJson,
+  //     }, function(){
+
+  //     });
+
+  //   })
+  //   .catch((error) =>{
+  //     console.error(error);
+  //   });
+
+ }
+
+  async getCryptos(){
+
+    console.log("tick")
+
+   fetch('https://api.coinmarketcap.com/v1/ticker/')
+    .then((response) => response.json())
+    .then((responseJson) => {
+
+      this.setState({
+        dataSource: responseJson,
+        isLoading: false,
+      }, function(){
+
+      });
+
+    })
+    .catch((error) =>{
+      console.error(error);
+    });
+
+  }
+
+  async globalStats(){
+    return fetch('https://api.coinmarketcap.com/v1/global/')
+    .then((response) => response.json())
+    .then((responseJson) => {
+
+      this.setState({
+        dataSourceGlobal: responseJson,
+        globalIsLoaded: true,
+      }, function(){
+
+      });
+
+    })
+    .catch((error) =>{
+      console.error(error);
+    });
+  }
+
+
+
+  async getCryptoHistoryOnClick(coinName) {
+
+   fetch(`https://api.coincap.io/v2/assets/${coinName.toLowerCase()}/history?interval=d1`)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        historyData: responseJson,
+        historyLoaded: coinName,
+      })
+    })
+    .catch((error) =>{
+      console.error(error);
+    });
+
+  }
+
+
+
+
+  renderCoinCards() {
+    const crypto = this.state.dataSource
+    return crypto.map((coin) =>
+      <CoinCard
+        key={coin.name}
+        rank={coin.rank}
+        coin_name={coin.name}
+        symbol={coin.symbol}
+        price_usd={renderPriceNumber(coin.price_usd)}
+        percent_change_1h={coin.percent_change_1h}
+        percent_change_24h={coin.percent_change_24h}
+        percent_change_7d={coin.percent_change_7d}
+        // coin history
+        historyData={this.state.historyData}
+        historyLoaded={this.state.historyLoaded}
+        historyFetch={()=>this.getCryptoHistoryOnClick(coin.name)}
+      />
+    )
+  }
+
+
+
+  render(){
+    const global = this.state.dataSourceGlobal
+
+
+    if(this.state.isLoading || !this.state.globalIsLoaded){
+      return(
+        <View style={{flex: 1, paddingTop: 200}}>
+          <ActivityIndicator/>
+        </View>
+        )
+    }
+
+    return(
+      <ScrollView contentContainerStyle={styles.contentContainer} refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this._onRefresh}
           />
-        </View>
-
-        <View style={styles.getStartedContainer}>
-          <DevelopmentModeNotice />
-
-          <Text style={styles.getStartedText}>Get started by opening</Text>
-
-          <View
-            style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-            <MonoText>screens/HomeScreen.js</MonoText>
-          </View>
-
-          <Text style={styles.getStartedText}>
-            Change this text and your app will automatically reload.
-          </Text>
-        </View>
-
-        <View style={styles.helpContainer}>
-          <TouchableOpacity onPress={handleHelpPress} style={styles.helpLink}>
-            <Text style={styles.helpLinkText}>
-              Help, it didn’t automatically reload!
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <View style={styles.tabBarInfoContainer}>
-        <Text style={styles.tabBarInfoText}>
-          This is a tab bar. You can edit it in:
-        </Text>
-
-        <View
-          style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-          <MonoText style={styles.codeHighlightText}>
-            navigation/MainTabNavigator.js
-          </MonoText>
-        </View>
+        }>
+      <View style={styles.homeHeader}>
+        <Text style={styles.homeHeaderTitle}>All Cryptos</Text>
+        <Text style={styles.homeHeaderText}>Total market cap: $ { nFormatter(global.total_market_cap_usd, 2) }</Text>
+        <Text style={styles.homeHeaderText}>24h Volume: $ { nFormatter(global.total_24h_volume_usd, 2) }</Text>
+        <Text style={styles.homeHeaderText}>Bitcoin dominance: {global.bitcoin_percentage_of_market_cap}%</Text>
+        <Text style={styles.homeHeaderText}>Active Currencies: {global.active_currencies}</Text>
+        <Text style={styles.homeHeaderText}>Active Assets: {global.active_assets}</Text>
       </View>
-    </View>
-  );
+        {this.renderCoinCards()}
+      </ScrollView>
+      );
+  }
+
+
+} // end of all
+
+
+
+
+function renderPriceNumber(x){
+  if(x >= 1000){
+    return(parseFloat(x).toFixed(1))
+  }else if(x >= 100){
+    return(parseFloat(x).toFixed(2))
+  }else if(x >= 10){
+    return(parseFloat(x).toFixed(3))
+  }else{
+    return(parseFloat(x).toFixed(4))
+  }
 }
+
+
+function nFormatter(num, digits) {
+  var si = [
+    { value: 1, symbol: "" },
+    { value: 1E3, symbol: "k" },
+    { value: 1E6, symbol: "M" },
+    { value: 1E9, symbol: "B" },
+    { value: 1E12, symbol: "T" },
+    { value: 1E15, symbol: "P" },
+    { value: 1E18, symbol: "E" }
+  ];
+  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+  var i;
+  for (i = si.length - 1; i > 0; i--) {
+    if (Math.abs(num) >= si[i].value) {
+      break;
+    }
+  }
+  return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+}
+
+
+
+
 
 HomeScreen.navigationOptions = {
   header: null,
 };
 
-function DevelopmentModeNotice() {
-  if (__DEV__) {
-    const learnMoreButton = (
-      <Text onPress={handleLearnMorePress} style={styles.helpLinkText}>
-        Learn more
-      </Text>
-    );
 
-    return (
-      <Text style={styles.developmentModeText}>
-        Development mode is enabled: your app will be slower but you can use
-        useful development tools. {learnMoreButton}
-      </Text>
-    );
-  } else {
-    return (
-      <Text style={styles.developmentModeText}>
-        You are not in development mode: your app will run at full speed.
-      </Text>
-    );
-  }
-}
-
-function handleLearnMorePress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/development-mode/'
-  );
-}
-
-function handleHelpPress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/up-and-running/#cant-see-your-changes'
-  );
-}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  developmentModeText: {
-    marginBottom: 20,
-    color: 'rgba(0,0,0,0.4)',
-    fontSize: 14,
-    lineHeight: 19,
-    textAlign: 'center',
-  },
   contentContainer: {
     paddingTop: 30,
+    backgroundColor: '#f8f8f8',
   },
-  welcomeContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
+  homeHeader: {
+    height: 300,
+    backgroundColor: '#4141ff',
+    flex: 1,
+    justifyContent: 'center',
+    marginBottom: 30,
   },
-  welcomeImage: {
-    width: 100,
-    height: 80,
-    resizeMode: 'contain',
-    marginTop: 3,
-    marginLeft: -10,
-  },
-  getStartedContainer: {
-    alignItems: 'center',
-    marginHorizontal: 50,
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-  codeHighlightText: {
-    color: 'rgba(96,100,109, 0.8)',
-  },
-  codeHighlightContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    lineHeight: 24,
+  homeHeaderTitle: {
+    fontSize: 35,
+    color: 'white',
     textAlign: 'center',
   },
-  tabBarInfoContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-    alignItems: 'center',
-    backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
+  homeHeaderText: {
+    fontSize: 20,
+    color: 'white',
     textAlign: 'center',
-  },
-  navigationFilename: {
-    marginTop: 5,
-  },
-  helpContainer: {
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    fontSize: 14,
-    color: '#2e78b7',
-  },
+  }
 });

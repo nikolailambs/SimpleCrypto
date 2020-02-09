@@ -13,34 +13,33 @@ import {
 } from 'react-native';
 import { images } from '../Utils/CoinIcons';
 
-import Chart from '../components/CryptoChart';
+import CoinCard from '../components/CoinCard';
+import CryptoChart from '../components/CryptoChart';
+
 
 
 
 export default class ProfileScreen extends React.Component {
-static navigationOptions = {
-  title: "Profile"
-  };
+// static navigationOptions = {
+//   title: "Profile"
+//   };
 
   constructor(props){
     super(props);
-    this.state ={
-      isLoading: true,
+    this.state = {
+      historyLoaded: false,
+      allowScroll: true,
     }
   };
 
   componentDidMount(){
-    return fetch(`https://min-api.cryptocompare.com/data/histoday?fsym=${this.props.navigation.state.params.symbol}&tsym=USD&limit=2000`)
+    fetch(`https://api.coincap.io/v2/assets/${this.props.navigation.state.params.name.toLowerCase().replace(/ /g,"-")}/history?interval=d1`)
     .then((response) => response.json())
     .then((responseJson) => {
-
       this.setState({
-        isLoading: false,
-        dataSource: responseJson,
-      }, function(){
-
-      });
-
+        historyData: responseJson,
+        historyLoaded: true,
+      })
     })
     .catch((error) =>{
       console.error(error);
@@ -48,150 +47,165 @@ static navigationOptions = {
 
   }
 
+
+  setScroll(bool) {
+   this.setState({allowScroll: bool})
+  }
+
+
+
+
   render() {
-    const { rank, symbol, coin_name, price_usd, percent_change_1h, percent_change_24h, percent_change_7d } = this.props.navigation.state.params
-    const crypto = this.state.dataSource
-    const data = parseObjectToDataArray(crypto)
 
+    let coin = this.props.navigation.state.params;
 
-if(this.state.isLoading){
-      return(
-        <View style={{flex: 1, paddingTop: 200}}>
-          <ActivityIndicator/>
-        </View>
-        )
-    }
+    var icon = images[coin.symbol.toLowerCase()]
+      ? images[coin.symbol.toLowerCase()]
+      : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
 
     return(
-      <View style={container}>
-        <Text>{coin_name}</Text>
-          <View style={profileRank}><Text style={profileRankText}>{rank}.</Text></View>
-          <Image style={profileImage} source={{ uri: images[symbol] }} />
-          <View style={profilePriceWrapper}>
-            <Text style={coinProfilePrice}>{renderPriceNumber(price_usd)} $</Text>
-            <Text style={percent_change_24h < 0 ? coinProfilePerce24Minus : coinProfilePerce24Plus }> {percent_change_24h} %</Text>
+      <ScrollView scrollEnabled={this.state.allowScroll}>
+        <View style={styles.headerWrapper}>
+          <View style={styles.headerContent} >
+            <Image
+              style={styles.image}
+              source={ icon }
+            />
+            <Text style={styles.nameText} >{coin.name}</Text>
+            {
+              // <Text>{coin.symbol}</Text>
+              //<Text style={styles.rankText}>{coin.rank}</Text>
+            }
           </View>
-        <Text style={profileSymbol}>{symbol}</Text>
+        </View>
+        <View style={styles.coinPriceWrapper}>
 
-          <Chart data={data} />
+          <Text style={styles.coinPrice}><Text style={styles.dollar}>$</Text>{
+            this.state.tooltipValue ?
+            this.state.tooltipValue
+            :
+            renderPriceNumber(coin.price_usd)
+          }</Text>
+          {
+          this.state.tooltipChange ?
+            <Text style={this.state.tooltipChange < 0 ? styles.coinPerce24Minus : styles.coinPerce24Plus}>{this.state.tooltipChange} %</Text>
+          :
+            <Text style={coin.percent_change_24h < 0 ? styles.coinPerce24Minus : styles.coinPerce24Plus}>{coin.percent_change_24h} %</Text>
+          }
+        </View>
+          {
+            this.state.historyLoaded ?
+            <View>
+              <CryptoChart
+                data={ this.state.historyData }
+                setScroll={(bool)=>this.setScroll(bool)}
+                setPriceValue={(val) => this.setState({tooltipValue: val})}
+                setChangeValue={(val) => this.setState({tooltipChange: val})}
+              />
+            </View>
+            :
+            null
+          }
+      </ScrollView>
+    )
 
-      </View>
-      )
+
   }
 
 }
 
+
+
+
 function renderPriceNumber(x){
   if(x >= 1000){
-    return(parseFloat(x).toFixed(1))
+    return(numberWithCommas(parseFloat(x).toFixed(1)))
   }else if(x >= 100){
-    return(parseFloat(x).toFixed(2))
+    return(numberWithCommas(parseFloat(x).toFixed(2)))
   }else if(x >= 10){
-    return(parseFloat(x).toFixed(3))
+    return(numberWithCommas(parseFloat(x).toFixed(3)))
   }else{
-    return(parseFloat(x).toFixed(4))
+    return(numberWithCommas(parseFloat(x).toFixed(4)))
   }
-  numberWithCommas(x)
-};
+}
 
 function numberWithCommas(x) {
   var parts = x.toString().split(".");
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return parts.join(".");
-};
+}
 
-function parseObjectToDataArray(crypto) {
-  var firstProp;
-  var dataArray = new Array();
 
-  for(var key in crypto) {
-      if(key == "Data") {
-          firstProp = crypto[key];
-          break;
-      }
-  }
-
-  for(var key in firstProp) {
-    for(var i in firstProp[key]) {
-      if(i == "close") {
-        dataArray.push( firstProp[key][i] );
-        break;
-      }
+function nFormatter(num, digits) {
+  var si = [
+    { value: 1, symbol: "" },
+    { value: 1E3, symbol: "k" },
+    { value: 1E6, symbol: "M" },
+    { value: 1E9, symbol: "B" },
+    { value: 1E12, symbol: "T" },
+    { value: 1E15, symbol: "P" },
+    { value: 1E18, symbol: "E" }
+  ];
+  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+  var i;
+  for (i = si.length - 1; i > 0; i--) {
+    if (Math.abs(num) >= si[i].value) {
+      break;
     }
   }
-  return dataArray;
-};
+  return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+}
+
+
+
+
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
-    display: "flex",
-    margin: 20,
-    position: 'relative',
+    backgroundColor: '#f8f8f8',
   },
-  profilePriceWrapper: {
-    flex: 1,
-    position: 'absolute',
-    right: 20,
-    top: 40,
+  image: {
+    marginTop: 10,
+    width: 60,
+    height: 60,
   },
-  coinProfilePrice: {
-    fontSize: 45,
+  headerWrapper: {
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    flexDirection:'row',
+    height: 200,
   },
-  profileImage: {
-    position: 'absolute',
-    left: 20,
-    top: 40,
-    width: 70,
-    height: 70,
+  headerContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  profileSymbol: {
-    textAlign: 'center',
-    fontSize: 30,
-    fontSize: 18,
-    marginTop: 20,
-    alignSelf: 'stretch',
+  nameText: {
+    fontSize: 25,
+    marginTop: 10,
   },
-  profileRank: {
-    marginTop: -15,
+  coinPriceWrapper: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  profileRankText: {
-    textAlign: 'center',
-    fontSize: 150,
-    margin: 0,
-    color: 'white',
-    zIndex: 0,
+  coinPrice: {
+    fontSize: 55,
   },
-  moneyProfileSymbol: {
-    fontWeight: 'normal'
+  dollar: {
+    fontSize: 25,
+    color: '#979797',
   },
-  coinProfileName: {
-    marginLeft: 10,
-    color: '#919191'
-  },
-  coinProfilePerce24Plus: {
-    fontSize: 30,
+  coinPerce24Plus: {
+    fontSize: 38,
+    marginTop: 10,
     color: "#00BFA5",
-    marginLeft: 10
   },
-  coinProfilePerce24Minus: {
-    fontSize: 30,
+  coinPerce24Minus: {
+    fontSize: 38,
+    marginTop: 10,
     color: "#DD2C00",
-    marginLeft: 10
   },
 })
 
-const {
-  container,
-  profileImage,
-  profileSymbol,
-  profileRank,
-  profileRankText,
-  moneyProfileSymbol,
-  coinSymbol,
-  coinProfileName,
-  coinProfilePrice,
-  coinProfilePerce24Minus,
-  coinProfilePerce24Plus,
-  profilePriceWrapper
-} = styles;

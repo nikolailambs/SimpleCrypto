@@ -14,8 +14,8 @@ import {
   TouchableHighlight,
 } from 'react-native';
 
-
 import CoinCard from '../components/CoinCard';
+import OverlayScreen from './OverlayScreen';
 
 import { MonoText } from '../components/StyledText';
 
@@ -23,13 +23,14 @@ import { MonoText } from '../components/StyledText';
 
 
 export default class HomeScreen extends React.Component {
-
   constructor(props){
     super(props);
     this.state ={
       isLoading: true,
       refreshing: false,
       globalIsLoaded: false,
+      overlay: false,
+      fetchIndex: 10,
     }
   };
 
@@ -59,24 +60,9 @@ export default class HomeScreen extends React.Component {
   this.globalStats()
   // funktioniert:
   // this.timer = setInterval(()=> this.getCryptos(), 5000)
-
-  // return fetch('https://api.coinmarketcap.com/v1/ticker/')
-  //   .then((response) => response.json())
-  //   .then((responseJson) => {
-
-  //     this.setState({
-  //       isLoading: false,
-  //       dataSource: responseJson,
-  //     }, function(){
-
-  //     });
-
-  //   })
-  //   .catch((error) =>{
-  //     console.error(error);
-  //   });
-
  }
+
+
 
   async getCryptos(){
 
@@ -120,20 +106,8 @@ export default class HomeScreen extends React.Component {
 
 
 
-  async getCryptoHistoryOnClick(coinName) {
-
-   fetch(`https://api.coincap.io/v2/assets/${coinName.toLowerCase()}/history?interval=d1`)
-    .then((response) => response.json())
-    .then((responseJson) => {
-      this.setState({
-        historyData: responseJson,
-        historyLoaded: coinName,
-      })
-    })
-    .catch((error) =>{
-      console.error(error);
-    });
-
+  setScroll(bool) {
+   this.setState({allowScroll: bool})
   }
 
 
@@ -141,6 +115,7 @@ export default class HomeScreen extends React.Component {
 
   renderCoinCards() {
     const crypto = this.state.dataSource
+
     return crypto.map((coin) =>
       <CoinCard
         key={coin.name}
@@ -152,9 +127,14 @@ export default class HomeScreen extends React.Component {
         percent_change_24h={coin.percent_change_24h}
         percent_change_7d={coin.percent_change_7d}
         // coin history
-        historyData={this.state.historyData}
-        historyLoaded={this.state.historyLoaded}
-        historyFetch={()=>this.getCryptoHistoryOnClick(coin.name)}
+        // historyData={this.state.historyData}
+        // historyLoaded={this.state.historyLoaded}
+        // historyFetch={()=>this.getCryptoHistory(coin)}
+        // methods
+        setScroll={(bool)=>this.setScroll(bool)}
+        onPress={() => this.props.navigation.navigate('ProfileScreen', coin)}
+        // onPress={() => this.setState({overlay: true})}
+        fetchIndex={this.state.fetchIndex}
       />
     )
   }
@@ -173,23 +153,42 @@ export default class HomeScreen extends React.Component {
         )
     }
 
+
     return(
-      <ScrollView contentContainerStyle={styles.contentContainer} refreshControl={
-          <RefreshControl
-            refreshing={this.state.refreshing}
-            onRefresh={this._onRefresh}
-          />
-        }>
-      <View style={styles.homeHeader}>
-        <Text style={styles.homeHeaderTitle}>All Cryptos</Text>
-        <Text style={styles.homeHeaderText}>Total market cap: $ { nFormatter(global.total_market_cap_usd, 2) }</Text>
-        <Text style={styles.homeHeaderText}>24h Volume: $ { nFormatter(global.total_24h_volume_usd, 2) }</Text>
-        <Text style={styles.homeHeaderText}>Bitcoin dominance: {global.bitcoin_percentage_of_market_cap}%</Text>
-        <Text style={styles.homeHeaderText}>Active Currencies: {global.active_currencies}</Text>
-        <Text style={styles.homeHeaderText}>Active Assets: {global.active_assets}</Text>
+      <View style={{flex: 1}}>
+        <ScrollView
+          contentContainerStyle={styles.contentContainer}
+          // scrolling
+          onScroll={() => this.setState({fetchIndex: this.state.fetchIndex + 1 })}
+          scrollEventThrottle={600}
+          // refreshing
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this._onRefresh}
+            />
+          }>
+        <View style={styles.homeHeader}>
+          <Text style={styles.homeHeaderTitle}>All Cryptos</Text>
+          <Text style={styles.homeHeaderText}>Total market cap: $ { nFormatter(global.total_market_cap_usd, 2) }</Text>
+          <Text style={styles.homeHeaderText}>24h Volume: $ { nFormatter(global.total_24h_volume_usd, 2) }</Text>
+          <Text style={styles.homeHeaderText}>Bitcoin dominance: {global.bitcoin_percentage_of_market_cap}%</Text>
+          <Text style={styles.homeHeaderText}>Active Currencies: {global.active_currencies}</Text>
+          <Text style={styles.homeHeaderText}>Active Assets: {global.active_assets}</Text>
+        </View>
+          {this.renderCoinCards()}
+        </ScrollView>
+
+        {
+            // <OverlayScreen
+            //   historyData={this.state.historyData}
+            //   historyLoaded={this.state.historyLoaded}
+            //   coin={this.state.coinOverlay}
+            //   closeOverlay={()=>this.setState({overlay: false})}
+            //   setScroll={(bool)=>this.setScroll(bool)}
+            // />
+        }
       </View>
-        {this.renderCoinCards()}
-      </ScrollView>
       );
   }
 
@@ -248,20 +247,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
   },
   homeHeader: {
-    height: 300,
-    backgroundColor: '#4141ff',
+    height: 320,
+    // backgroundColor: '#6479FF',
     flex: 1,
     justifyContent: 'center',
     marginBottom: 30,
+    marginTop: -40,
   },
   homeHeaderTitle: {
     fontSize: 35,
-    color: 'white',
+    color: '#232323',
     textAlign: 'center',
   },
   homeHeaderText: {
     fontSize: 20,
-    color: 'white',
+    color: '#232323',
     textAlign: 'center',
   }
 });

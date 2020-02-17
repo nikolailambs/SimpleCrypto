@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Button, StyleSheet, Dimensions, PanResponder } from 'react-native';
+import { View, Button, StyleSheet, Dimensions, PanResponder, TouchableOpacity } from 'react-native';
 
-import { LineChart, YAxis, Grid } from 'react-native-svg-charts';
+import { LineChart, YAxis, Grid, Path } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
-import { Circle, G, Line, Rect, Text, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Circle, G, Line, Rect, Text, Defs, LinearGradient, Stop, ClipPath } from 'react-native-svg';
 import Moment from 'moment';
+import * as Haptics from 'expo-haptics';
+
+import { colors } from '../Utils/CoinColors';
 
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 
@@ -17,8 +20,6 @@ export default class CryptoChart extends React.PureComponent {
       tooltipOne: false,
       tooltipTwo: false,
       chartWidth: Dimensions.get('window').width - 40,
-      data: parseObjectToDataArray(this.props.data),
-      dates: parseObjectToDatesArray(this.props.data),
     }
 
     this._panResponder = PanResponder.create({
@@ -31,14 +32,15 @@ export default class CryptoChart extends React.PureComponent {
       onPanResponderGrant: (evt, gestureState) => {
         // The gesture has started. Show visual feedback so the user knows
         // what is happening!
-        // gestureState.d{x,y} will be set to zero now
-
+        // gestureState.d{x,y} will be set to zero PushNotificationIOS.=(NewData, NoData, ResultFailed, }, static, (, :)
         this.props.setScroll(false) // disable scroll
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
         if (evt.nativeEvent.touches.length == 1) {
           this.setState({xtouch: evt.nativeEvent.locationX, tooltipOne: true})
           this.passTooltipToParent({valueOne: evt.nativeEvent.locationX})
         }
+
         if (evt.nativeEvent.touches.length == 2) {
           this.setState({xtouch: evt.nativeEvent.touches[0].locationX, tooltipOne: true})
           this.setState({xtouchTwo: evt.nativeEvent.touches[1].locationX, tooltipTwo: true})
@@ -59,6 +61,7 @@ export default class CryptoChart extends React.PureComponent {
           this.setState({xtouch: evt.nativeEvent.locationX, tooltipOne: true})
           this.passTooltipToParent({valueOne: evt.nativeEvent.locationX})
         }
+
         if (evt.nativeEvent.touches.length == 2) {
           this.setState({xtouch: evt.nativeEvent.touches[0].locationX, tooltipOne: true})
           this.setState({xtouchTwo: evt.nativeEvent.touches[1].locationX, tooltipTwo: true})
@@ -103,7 +106,7 @@ export default class CryptoChart extends React.PureComponent {
   passTooltipToParent = ({valueOne, valueTwo}) => {
 
     // wie in render method
-    let data = this.state.data;
+    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 2) : parseObjectToDataArray(this.props.historyData);
     var chartWidth = this.state.chartWidth; // better chart width also dimension works too
 
     let xSwipe = Math.floor((data.length) * valueOne/chartWidth);
@@ -147,11 +150,24 @@ export default class CryptoChart extends React.PureComponent {
 
 
 
+
+
+
   render() {
+
+    var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+      ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+      : '#4141ff';
+
+    if (this.props.fetchingAddData) {
+      color = '#cacaca'
+    }
+
     Moment.locale('en');
 
-    let data = this.state.data;
-    let dates = this.state.dates;
+
+    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 2) : parseObjectToDataArray(this.props.historyData);
+    let dates = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDatesArray(this.props.historyData), 2) : parseObjectToDatesArray(this.props.historyData);
 
 
     const contentInset = { top: 20, bottom: 20 };
@@ -199,13 +215,13 @@ export default class CryptoChart extends React.PureComponent {
                     <Line
                         y1={ 355 }
                         y2={ y(data[ xSwipe ]) }
-                        stroke={ '#4141ff' }
+                        stroke={ color }
                         strokeWidth={ 2 }
                     />
                     <Circle
                         cy={ y(data[ xSwipe ]) }
                         r={ 6 }
-                        stroke={ '#4141ff' }
+                        stroke={ color }
                         strokeWidth={ 2 }
                         fill={ 'white' }
                     />
@@ -233,13 +249,13 @@ export default class CryptoChart extends React.PureComponent {
                     <Line
                         y1={ 355 }
                         y2={ y(data[ xSwipeTwo ]) }
-                        stroke={ '#4141ff' }
+                        stroke={ color }
                         strokeWidth={ 2 }
                     />
                     <Circle
                         cy={ y(data[ xSwipeTwo ]) }
                         r={ 6 }
-                        stroke={ '#4141ff' }
+                        stroke={ color }
                         strokeWidth={ 2 }
                         fill={ 'white' }
                     />
@@ -248,37 +264,84 @@ export default class CryptoChart extends React.PureComponent {
         )
 
 
+
+        const Clips = ({ x, width }) => (
+            <Defs key={ 'clips' }>
+              <ClipPath id={ 'clip-path-1' }>
+                <Rect x={ x(xSwipe) } y={ '0' } width={ x(xSwipeTwo) - x(xSwipe) } height={ '100%' }/>
+              </ClipPath>
+            </Defs>
+        )
+
+
+      const ColorLine = ({ line }) => (
+          <Path
+              key={ 'line-1' }
+              d={ line }
+              stroke={ color }
+              strokeWidth={ 2 }
+              fill={ 'none' }
+              clipPath={ 'url(#clip-path-1)' }
+          />
+        )
+
+
+
     return (
+      <View>
         <View
           style={styles.chartContainer} {...this._panResponder.panHandlers}
           onLayout={(event) => {
               var {x, y, width, height} = event.nativeEvent.layout;
-              this.setState({chartWidth: width - 40})
+              this.setState({chartWidth: width })
           }}>
               <LineChart
-                  style={{ flex: 1, marginLeft: 20, marginRight: 20 }}
+                  style={{ flex: 1 }}
                   data={ data }
+                  animate={ true }
                   svg={{
                     strokeWidth: 2,
-                    stroke: '#4141ff',
+                    // stroke: '#c5c5c5',
+                    stroke: color,
                   }}
                   curve={shape.curveNatural}
                   contentInset={ { top: 40, bottom: 30 } }
               >
               {
-                this.state.tooltipOne ?
-                  <Tooltip/>
-                :
-                null
+                  // <ColorLine/>
               }
-              {
-                this.state.tooltipTwo ?
-                  <TooltipTwo/>
-                :
-                null
-              }
+                {
+                  // this.state.tooltipTwo ?
+                  // <Clips/>
+                  //  :
+                  // null
+                }
+
+                {
+                  this.state.tooltipOne ?
+                    <Tooltip/>
+                  :
+                  null
+                }
+                {
+                  this.state.tooltipTwo ?
+                    <TooltipTwo/>
+                  :
+                  null
+                }
+
 
               </LineChart>
+          </View>
+
+              <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around', margin: 20 }}>
+                <Button backgroundColor={"#3fffff"} title="All" onPress={() => this.props.updateRange("All") } color={ this.props.chartRange == "All" ? color : "#292929"} />
+                <Button backgroundColor={"#3fffff"} title="1Y" onPress={() => this.props.updateRange("1Y") } color={ this.props.chartRange == "1Y" ? color : "#292929"} />
+                <Button backgroundColor={"#3fffff"} title="6M" onPress={() => this.props.updateRange("6M") } color={ this.props.chartRange == "6M" ? color : "#292929"} />
+                <Button backgroundColor={"#3fffff"} title="3M" onPress={() => this.props.updateRange("3M") } color={ this.props.chartRange == "3M" ? color : "#292929"} />
+                <Button backgroundColor={"#3fffff"} title="1M" onPress={() => this.props.updateRange("1M") } color={ this.props.chartRange == "1M" ? color : "#292929"} />
+                <Button backgroundColor={"#3fffff"} title="1W" onPress={() => this.props.updateRange("1W") } color={ this.props.chartRange == "1W" ? color : "#292929"} />
+              </View>
 
           </View>
       )
@@ -286,30 +349,36 @@ export default class CryptoChart extends React.PureComponent {
 }
 
 
+
+
+
+
 // prices
 function parseObjectToDataArray(crypto) {
-
-  let data = crypto.data
+  let data = crypto
   let dataArray = []
 
-  data.forEach(function(obj) {
-
-    dataArray.push( parseFloat(obj["priceUsd"]) )
-
+  data.forEach(function(array) {
+    dataArray.push( parseFloat(array[1]) )
   });
 
   return dataArray;
 };
 
+
+
 // dates
 function parseObjectToDatesArray(crypto) {
-  let data = crypto.data
+  let data = crypto
   let datesArray = []
-  data.forEach(function(obj) {
-    datesArray.push( Date.parse(obj["date"]) )
+
+  data.forEach(function(array) {
+    datesArray.push( new Date(array[0]) )
   });
+
   return datesArray;
 };
+
 
 
 function renderPriceNumber(x){
@@ -334,11 +403,34 @@ function numberWithCommas(x) {
 
 
 
+function groupAverage(arr, n) {
+  var result = [];
+  for (var i = 0; i < arr.length;) {
+    var sum = 0;
+    for(var j = 0; j< n; j++){
+      // Check if value is numeric. If not use default value as 0
+      sum += +arr[i++] || 0
+    }
+    result.push(sum/n);
+  }
+  return result
+}
+
+
+
 const styles = StyleSheet.create({
   chartContainer: {
     height: 370,
     flexDirection: 'row',
     zIndex: 10,
     marginTop: 50,
-  }
+    marginRight: 20,
+    marginLeft: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowColor: '#d1d1d1',
+    shadowOffset: { height: 5, width: 3 },
+  },
 })

@@ -11,19 +11,34 @@ import ProfileScreen from '../screens/ProfileScreen';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
+
+
 const config = Platform.select({
   web: { headerMode: 'screen' },
   default: {},
 });
 
+
+
 const HomeStack = createStackNavigator({
    Home: {
-    screen: HomeScreen 
+    screen: HomeScreen
   },
   ProfileScreen: {
-    screen: ProfileScreen 
+    screen: ProfileScreen,
+    navigationOptions: {
+      headerStyle: {
+        elevation: 0,
+        shadowOpacity: 0,
+        borderBottomWidth: 0,
+        backgroundColor: '#f8f8f8',
+      },
+      headerTintColor: '#a1a1a1',
+    }
   },
 });
+
+
 
 HomeStack.navigationOptions = {
   tabBarLabel: 'All',
@@ -39,7 +54,10 @@ HomeStack.navigationOptions = {
   ),
 };
 
+
+
 HomeStack.path = '';
+
 
 const LinksStack = createStackNavigator(
   {
@@ -48,12 +66,14 @@ const LinksStack = createStackNavigator(
   config
 );
 
+
 LinksStack.navigationOptions = {
   tabBarLabel: 'Links',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
   ),
 };
+
 
 LinksStack.path = '';
 
@@ -64,6 +84,8 @@ const SettingsStack = createStackNavigator(
   config
 );
 
+
+
 SettingsStack.navigationOptions = {
   tabBarLabel: 'Settings',
   tabBarIcon: ({ focused }) => (
@@ -73,11 +95,14 @@ SettingsStack.navigationOptions = {
 
 SettingsStack.path = '';
 
+
 const tabNavigator = createBottomTabNavigator({
   HomeStack,
   LinksStack,
   SettingsStack,
 });
+
+
 
 tabNavigator.path = '';
 

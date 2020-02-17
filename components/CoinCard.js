@@ -18,13 +18,13 @@ import * as shape from 'd3-shape';
 import { Line, LinearGradient, Path } from 'react-native-svg';
 
 import { images } from '../Utils/CoinIcons';
+import { colors } from '../Utils/CoinColors';
 import CryptoChart from './CryptoChart';
 
 const { UIManager } = NativeModules;
 
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
-
 
 
 
@@ -39,7 +39,7 @@ export default class CoinCard extends React.Component {
 
   async getCryptoHistory() {
     let oneday = 60 * 60 * 24 * 1000;
-    let coinName = this.props.coin_name.toLowerCase().replace(/ /g,"-");
+    let coinName = this.props.id;
 
    fetch(`https://api.coincap.io/v2/assets/${coinName}/history?interval=h1&start=${Date.now() - oneday}&end=${Date.now()}`)
     .then((response) => response.json())
@@ -61,49 +61,40 @@ export default class CoinCard extends React.Component {
   }
 
 
-  // _onPress = () => {
-  //   // Animate the update
-  //   LayoutAnimation.spring();
-  //   if (this.state.selectedOverlay) {
-  //     this.setState({h: this.state.h - 400, selectedOverlay: false})
-  //   }else{
-  //     this.props.historyFetch()
-  //     // console.log(this.props.historyData)
-  //     this.setState({h: this.state.h + 400, selectedOverlay: true, historyIsLoaded: true})
+
+render(){
+
+  // if (!this.state.historyLoaded) {
+  //   if (this.props.index < this.props.fetchIndex) {
+  //     this.getCryptoHistory()
   //   }
   // }
 
 
 
+  var icon = images[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
 
+  var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    : '#4141ff';
 
-render(){
-
-  if (!this.state.historyLoaded) {
-    if (this.props.rank < this.props.fetchIndex) {
-      console.log(this.props.rank)
-      console.log(this.props.coin_name)
-      this.getCryptoHistory()
-    }
-  }
-
-    var icon = images[this.props.symbol.toLowerCase()]
-      ? images[this.props.symbol.toLowerCase()]
-      : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
+  var transparent = color + '33'
 
 
   const Line = ({ line }) => (
     <Path
       key={'line'}
       d={line}
-      stroke={this.state.historyLoaded ? '#4141ff' : '#cfcfcf'}
+      stroke={this.props.sparkLinesLoaded ? '#4141ff' : '#cfcfcf'}
       strokeWidth={2}
       fill={'none'}
     />
   )
 
   return (
-    // const { rank, symbol, coin_name, price_usd, percent_change_1h, percent_change_24h, percent_change_7d, onPress } = this.props
+    // const { rank, symbol, coinName, price, percent_change_1h, percentChange, percent_change_7d, onPress } = this.props
       <TouchableHighlight
         onPress={() => this.props.onPress()} 
         underlayColor='transparent'>
@@ -115,18 +106,18 @@ render(){
               source={ icon }
             />
             <View>
-              <Text style={coinSymbol}>{this.props.symbol}</Text>
-              <Text style={coinName}>{this.props.coin_name}</Text>
+              <Text style={coinSymbol}>{this.props.symbol.toUpperCase()}</Text>
+              <Text style={coinName}>{this.props.coinName}</Text>
             </View>
           </View>
 
               <View style={styles.chartContainer}>
                 <AreaChart
                     style={{ flex: 1, marginLeft: 10, marginRight: 10 }}
-                    data={ this.state.historyLoaded ? parseObjectToDataArray(this.state.historyData) : [1, 3, 2, 2, 3] }
+                    data={ this.props.sparkLines }
                     curve={shape.curveNatural}
                     svg={{
-                      fill: this.state.historyLoaded ? 'rgba(102, 122, 255, 0.2)' : 'rgba(207, 207, 207, 0.2)',
+                      fill: this.props.sparkLinesLoaded ? 'rgba(102, 122, 255, 0.2)' : 'rgba(207, 207, 207, 0.2)',
                     }}
                     contentInset={ { top: 10, bottom: 10 } }
                 >
@@ -134,11 +125,11 @@ render(){
                 </AreaChart>
               </View>
 
-              <View>
-                <Text style={coinPrice}>{numberWithCommas(this.props.price_usd)}
+              <View style={{width: 100}}>
+                <Text style={coinPrice}>{numberWithCommas(getlength(this.props.price))}
                   <Text style={moneySymbol}>$</Text>
                 </Text>
-                <Text style={this.props.percent_change_24h < 0 ? coinPerce24Minus : coinPerce24Plus }> {this.props.percent_change_24h}
+                <Text style={this.props.percentChange < 0 ? coinPerce24Minus : coinPerce24Plus }> {Math.round(this.props.percentChange*100)/100}
                   <Text style={moneySymbol}> %</Text>
                 </Text>
               </View>
@@ -168,7 +159,14 @@ function parseObjectToDataArray(crypto) {
 };
 
 
-
+function getlength(number) {
+  let char = number.toString().length;
+  if (char >= 7) {
+    return Math.round(number*10000000)/10000000;
+  }else{
+    return number;
+  }
+}
 
 
 
@@ -197,63 +195,65 @@ const styles = StyleSheet.create({
   },
   coinSymbol: {
     fontSize: 20,
-    marginTop: 15,
+    marginTop: 10,
     marginLeft: 20,
     marginRight: 5,
+    fontFamily: 'nunito',
+  },
+  coinName: {
+    marginLeft: 20,
+    color: '#919191',
+    fontFamily: 'nunito',
   },
   coinPrice: {
     fontSize: 20,
-    marginTop: 15,
-    marginLeft: "auto",
-    marginRight: 10,
-    fontWeight: 'bold'
-  },
-  image: {
     marginTop: 10,
-    width: 40,
-    height: 40,
-  },
-  moneySymbol: {
-    fontWeight: 'normal'
-  },
-  statisticsContainer: {
-    display: "flex",
-    padding: 10,
-    flexDirection: "row",
-    justifyContent: "space-around"
-  },
-  coinName: {
-    marginLeft: 10,
-    color: '#919191'
-  },
-  percentChangePlus: {
-    color: "#00BFA5",
-    marginLeft: 10
-  },
-  percentChangeMinus: {
-    color: "#DD2C00",
-    marginLeft: 10
+    // marginBottom: 5,
+    // marginLeft: "auto",
+    marginRight: 5,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    fontFamily: 'nunitoBold',
   },
   coinPerce24Plus: {
     fontSize: 20,
     color: "#00BFA5",
-    marginLeft: 10
+    marginBottom: 5,
+    marginRight: 5,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    fontFamily: 'nunitoBold',
   },
   coinPerce24Minus: {
     fontSize: 20,
     color: "#DD2C00",
-    marginLeft: 10
+    marginBottom: 5,
+    marginRight: 5,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    fontFamily: 'nunitoBold',
+  },
+  image: {
+    marginTop: 5,
+    marginBottom: 5,
+    width: 45,
+    height: 45,
+  },
+  moneySymbol: {
+    fontWeight: 'normal',
+    fontFamily: 'nunito',
   },
   rankNumber: {
     fontSize: 20,
-    // width: 50,
     color: '#3a3a3a',
     textAlign: 'center',
-    flex: 1
+    flex: 1,
+    fontFamily: 'nunito',
   },
   chartContainer: {
     height: '100%',
-    width: 80,
+    marginRight: 10,
+    width: 100,
     flexDirection: 'row',
   }
 })
@@ -266,7 +266,6 @@ const {
   coinSymbol,
   coinName,
   coinPrice,
-  statisticsContainer,
   seperator,
   percentChangePlus,
   percentChangeMinus,

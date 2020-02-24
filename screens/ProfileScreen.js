@@ -14,12 +14,15 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
+
 import { images } from '../Utils/CoinIcons';
 import { history } from '../Utils/HistoryHolder';
 import { Ionicons } from '@expo/vector-icons';
 
 import CoinCard from '../components/CoinCard';
 import CryptoChart from '../components/CryptoChart';
+
+
 
 
 
@@ -449,6 +452,16 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
+  imageShadow: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#f37f16',
+    borderRadius: 30,
+    position: 'absolute',
+    zIndex: -1,
+    top: 38,
+    right: 174
+  },
   ovalShadow: {
     marginTop: 8,
     width: 10,
@@ -542,7 +555,7 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     textAlignVertical: 'center',
     fontWeight: 'bold',
-    fontFamily: 'nunitoBold',
+    fontFamily: 'nunito',
   },
   infoIcon: {
     width: '20%',

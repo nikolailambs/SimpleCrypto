@@ -82,7 +82,7 @@ export default class HomeScreen extends React.Component {
 
   async getSparkLines(){
 
-   fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true')
+   fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=true')
     .then((response) => response.json())
     .then((responseJson) => {
       this.setState({
@@ -216,7 +216,7 @@ export default class HomeScreen extends React.Component {
 
 
     return(
-      <View style={{flex: 1}}>
+      <View style={{flex: 1, backgroundColor: '#f8f8f8'}}>
         <ScrollView
           contentContainerStyle={styles.contentContainer}
           // scrolling
@@ -253,7 +253,7 @@ export default class HomeScreen extends React.Component {
           </TouchableOpacity>
         </View>
 
-        <View style={{minHeight: 500}}>
+        <View>
           {this.renderCoinCards()}
         </View>
         </ScrollView>

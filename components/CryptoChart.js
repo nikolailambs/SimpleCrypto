@@ -106,7 +106,7 @@ export default class CryptoChart extends React.PureComponent {
   passTooltipToParent = ({valueOne, valueTwo}) => {
 
     // wie in render method
-    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 2) : parseObjectToDataArray(this.props.historyData);
+    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 4) : parseObjectToDataArray(this.props.historyData);
     var chartWidth = this.state.chartWidth; // better chart width also dimension works too
 
     let xSwipe = Math.floor((data.length) * valueOne/chartWidth);
@@ -162,6 +162,7 @@ export default class CryptoChart extends React.PureComponent {
     if (this.props.fetchingAddData) {
       color = '#cacaca'
     }
+
 
     Moment.locale('en');
 
@@ -265,11 +266,16 @@ export default class CryptoChart extends React.PureComponent {
 
 
 
+
+
         const Clips = ({ x, width }) => (
             <Defs key={ 'clips' }>
-              <ClipPath id={ 'clip-path-1' }>
-                <Rect x={ x(xSwipe) } y={ '0' } width={ x(xSwipeTwo) - x(xSwipe) } height={ '100%' }/>
-              </ClipPath>
+                <ClipPath id={ 'clip-path-1' } key={ '0' }>
+                    <Rect x={ 0 } y={ '0' } width={ '100%' } height={ '100%' }/>
+                </ClipPath>
+                <ClipPath id="clip-path-2" key={ '1' }>
+                    <Rect x={ x(xSwipe) } y={ '0' } width={ x(xSwipeTwo) - x(xSwipe) } height={ '100%' }/>
+                </ClipPath>
             </Defs>
         )
 
@@ -281,9 +287,11 @@ export default class CryptoChart extends React.PureComponent {
               stroke={ color }
               strokeWidth={ 2 }
               fill={ 'none' }
-              clipPath={ 'url(#clip-path-1)' }
+              clipPath={ 'url(#clip-path-2)' }
           />
         )
+
+
 
 
 
@@ -301,20 +309,24 @@ export default class CryptoChart extends React.PureComponent {
                   animate={ true }
                   svg={{
                     strokeWidth: 2,
-                    // stroke: '#c5c5c5',
-                    stroke: color,
+                    stroke: this.state.tooltipTwo ? '#c5c5c5' : color,
+                    // stroke: color,
+                    clipPath: 'url(#clip-path-1)',
                   }}
                   curve={shape.curveNatural}
                   contentInset={ { top: 40, bottom: 30 } }
               >
-              {
-                  // <ColorLine/>
-              }
                 {
-                  // this.state.tooltipTwo ?
-                  // <Clips/>
-                  //  :
-                  // null
+                  this.state.tooltipTwo ?
+                    <Clips/>
+                    :
+                    null
+                }
+                {
+                  this.state.tooltipTwo ?
+                    <ColorLine/>
+                    :
+                    null
                 }
 
                 {

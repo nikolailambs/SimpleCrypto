@@ -351,42 +351,42 @@ const fill = '#c5c8c8'
               <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around', margin: 20 }}>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "All" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "All" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("All") }
                 >
                   <Button title="All" onPress={() => this.props.updateRange("All") } color={ this.props.chartRange == "All" ? '#ffffff' : "#292929"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1Y" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1Y" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("1Y") }
                 >
                   <Button title="1Y" onPress={() => this.props.updateRange("1Y") } color={ this.props.chartRange == "1Y" ? '#ffffff' : "#292929"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "6M" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "6M" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("6M") }
                 >
                   <Button title="6M" onPress={() => this.props.updateRange("6M") } color={ this.props.chartRange == "6M" ? '#ffffff' : "#292929"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "3M" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "3M" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("3M") }
                 >
                   <Button title="3M" onPress={() => this.props.updateRange("3M") } color={ this.props.chartRange == "3M" ? '#ffffff' : "#292929"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1W" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1W" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("1W") }
                 >
                   <Button title="1W" onPress={() => this.props.updateRange("1W") } color={ this.props.chartRange == "1W" ? '#ffffff' : "#292929"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1D" ? color : "#fbffff"}]}
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1D" ? color : "#ffffff"}]}
                   onPress={() => this.props.updateRange("1D") }
                 >
                   <Button title="1D" onPress={() => this.props.updateRange("1D") } color={ this.props.chartRange == "1D" ? '#ffffff' : "#292929"} />

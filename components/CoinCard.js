@@ -88,13 +88,13 @@ render(){
   var areaFill = 'rgba(207, 207, 207, 0.2)';
   var sparkLine = 'rgba(207, 207, 207, 1)';
   if (this.props.sparkLinesLoaded) {
-    if (this.props.chartColorOnChange) {
-      areaFill = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.2)' : 'rgba(221, 44, 0, 0.2)';
-      sparkLine = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 1)' : 'rgba(221, 44, 0, 1)';
-    }else{
+    // if (this.props.chartColorOnChange) {
+    //   areaFill = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.2)' : 'rgba(221, 44, 0, 0.2)';
+    //   sparkLine = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 1)' : 'rgba(221, 44, 0, 1)';
+    // }else{
       areaFill = 'rgba(102, 122, 255, 0.2)';
       sparkLine = 'rgba(102, 122, 255, 1)';
-    }
+    // }
   }
 
 

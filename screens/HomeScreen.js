@@ -54,9 +54,8 @@ export default class HomeScreen extends React.Component {
   this.getCryptos()
   this.globalStats()
   this.getSparkLines()
-  // this.interval = setInterval(() => this.getSparkLines(), 30000);
   // funktioniert:
-  // this.timer = setInterval(()=> this.getCryptos(), 5000)
+  // this.timer = setInterval(()=> this.getSparkLines(), 5000)
  }
 
 
@@ -89,14 +88,14 @@ export default class HomeScreen extends React.Component {
     .then((response) => response.json())
     .then((responseJson) => {
 
-      this.setState({chartColorOnChange: true})
+      // this.setState({chartColorOnChange: true})
       this.setState({
         originalData: responseJson,
         dataSource: responseJson,
         sparkLinesLoaded: true,
         refreshing: false,
       });
-      setInterval(() => this.setState({chartColorOnChange: false}), 1);
+      // setInterval(() => this.setState({chartColorOnChange: false}), 1);
 
     })
     .catch((error) =>{

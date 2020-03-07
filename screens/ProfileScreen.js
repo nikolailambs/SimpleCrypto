@@ -115,7 +115,6 @@ export default class ProfileScreen extends React.Component {
       let week = this.props.navigation.state.params.coin.sparkline_in_7d.price;
       // var today = new Date();
       var yesterday = new Date(new Date().setDate(new Date().getDate()-1));
-      console.log(yesterday)
 
       day = returnHistoryRangeArray( addTimeToWeekArray(week), yesterday )
       this.setState({ historyData: day })

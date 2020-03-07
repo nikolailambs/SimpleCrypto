@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Button, StyleSheet, Dimensions, PanResponder, TouchableOpacity } from 'react-native';
 
-import { LineChart, YAxis, Grid, Path } from 'react-native-svg-charts';
+import { LineChart, YAxis, Grid, Path, BarChart } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
 import { Circle, G, Line, Rect, Text, Defs, LinearGradient, Stop, ClipPath } from 'react-native-svg';
 import Moment from 'moment';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '../Utils/CoinColors';
+import { renderPriceNumber } from '../Utils/Functions';
 
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 
@@ -106,7 +107,7 @@ export default class CryptoChart extends React.PureComponent {
   passTooltipToParent = ({valueOne, valueTwo}) => {
 
     // wie in render method
-    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 4) : parseObjectToDataArray(this.props.historyData);
+    let data = this.props.historyData.length > 1000 ? groupAverage(parseObjectToDataArray(this.props.historyData), 2) : parseObjectToDataArray(this.props.historyData);
     var chartWidth = this.state.chartWidth; // better chart width also dimension works too
 
     let xSwipe = Math.floor((data.length) * valueOne/chartWidth);
@@ -270,9 +271,6 @@ export default class CryptoChart extends React.PureComponent {
 
         const Clips = ({ x, width }) => (
             <Defs key={ 'clips' }>
-                <ClipPath id={ 'clip-path-1' } key={ '0' }>
-                    <Rect x={ 0 } y={ '0' } width={ '100%' } height={ '100%' }/>
-                </ClipPath>
                 <ClipPath id="clip-path-2" key={ '1' }>
                     <Rect x={ x(xSwipe) } y={ '0' } width={ x(xSwipeTwo) - x(xSwipe) } height={ '100%' }/>
                 </ClipPath>
@@ -292,7 +290,7 @@ export default class CryptoChart extends React.PureComponent {
         )
 
 
-
+const fill = '#c5c8c8'
 
 
     return (
@@ -310,8 +308,6 @@ export default class CryptoChart extends React.PureComponent {
                   svg={{
                     strokeWidth: 2,
                     stroke: this.state.tooltipTwo ? '#c5c5c5' : color,
-                    // stroke: color,
-                    clipPath: 'url(#clip-path-1)',
                   }}
                   curve={shape.curveNatural}
                   contentInset={ { top: 40, bottom: 30 } }
@@ -344,15 +340,58 @@ export default class CryptoChart extends React.PureComponent {
 
 
               </LineChart>
+
           </View>
 
+            {
+              // <BarChart style={{ height: 40 }} data={data} svg={{ fill }} contentInset={ { top: 10, right: 20, bottom: 10, left: 20 } }>
+              // </BarChart>
+            }
+
               <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around', margin: 20 }}>
-                <Button backgroundColor={"#3fffff"} title="All" onPress={() => this.props.updateRange("All") } color={ this.props.chartRange == "All" ? color : "#292929"} />
-                <Button backgroundColor={"#3fffff"} title="1Y" onPress={() => this.props.updateRange("1Y") } color={ this.props.chartRange == "1Y" ? color : "#292929"} />
-                <Button backgroundColor={"#3fffff"} title="6M" onPress={() => this.props.updateRange("6M") } color={ this.props.chartRange == "6M" ? color : "#292929"} />
-                <Button backgroundColor={"#3fffff"} title="3M" onPress={() => this.props.updateRange("3M") } color={ this.props.chartRange == "3M" ? color : "#292929"} />
-                <Button backgroundColor={"#3fffff"} title="1M" onPress={() => this.props.updateRange("1M") } color={ this.props.chartRange == "1M" ? color : "#292929"} />
-                <Button backgroundColor={"#3fffff"} title="1W" onPress={() => this.props.updateRange("1W") } color={ this.props.chartRange == "1W" ? color : "#292929"} />
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "All" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("All") }
+                >
+                  <Button title="All" onPress={() => this.props.updateRange("All") } color={ this.props.chartRange == "All" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1Y" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("1Y") }
+                >
+                  <Button title="1Y" onPress={() => this.props.updateRange("1Y") } color={ this.props.chartRange == "1Y" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "6M" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("6M") }
+                >
+                  <Button title="6M" onPress={() => this.props.updateRange("6M") } color={ this.props.chartRange == "6M" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "3M" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("3M") }
+                >
+                  <Button title="3M" onPress={() => this.props.updateRange("3M") } color={ this.props.chartRange == "3M" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1W" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("1W") }
+                >
+                  <Button title="1W" onPress={() => this.props.updateRange("1W") } color={ this.props.chartRange == "1W" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1D" ? color : "#fbffff"}]}
+                  onPress={() => this.props.updateRange("1D") }
+                >
+                  <Button title="1D" onPress={() => this.props.updateRange("1D") } color={ this.props.chartRange == "1D" ? '#ffffff' : "#292929"} />
+                </TouchableOpacity>
+
               </View>
 
           </View>
@@ -393,26 +432,6 @@ function parseObjectToDatesArray(crypto) {
 
 
 
-function renderPriceNumber(x){
-  if(x >= 1000){
-    return(numberWithCommas(parseFloat(x).toFixed(1)))
-  }else if(x >= 100){
-    return(numberWithCommas(parseFloat(x).toFixed(2)))
-  }else if(x >= 10){
-    return(numberWithCommas(parseFloat(x).toFixed(3)))
-  }else{
-    return(numberWithCommas(parseFloat(x).toFixed(4)))
-  }
-}
-
-
-
-function numberWithCommas(x) {
-  var parts = x.toString().split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return parts.join(".");
-}
-
 
 
 function groupAverage(arr, n) {
@@ -444,5 +463,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowColor: '#d1d1d1',
     shadowOffset: { height: 5, width: 3 },
+  },
+  button: {
+    flex: 1,
+    alignItems:'center',
+    justifyContent:'center',
+    height: 40,
+    marginLeft: 8,
+    marginRight: 8,
+    borderRadius: 10,
   },
 })

@@ -21,7 +21,9 @@ import OverlayScreen from './OverlayScreen';
 
 import { MonoText } from '../components/StyledText';
 
-// coinmarket global API: https://api.coinmarketcap.com/v1/global/
+import { nFormatter } from '../Utils/Functions';
+
+
 
 
 export default class HomeScreen extends React.Component {
@@ -36,6 +38,7 @@ export default class HomeScreen extends React.Component {
       search: '',
       sort: 'market_cap_rank',
       resorting: false,
+      chartColorOnChange: false
     }
   };
 
@@ -51,6 +54,7 @@ export default class HomeScreen extends React.Component {
   this.getCryptos()
   this.globalStats()
   this.getSparkLines()
+  this.interval = setInterval(() => this.getSparkLines(), 30000);
   // funktioniert:
   // this.timer = setInterval(()=> this.getCryptos(), 5000)
  }
@@ -81,18 +85,18 @@ export default class HomeScreen extends React.Component {
 
 
   async getSparkLines(){
-
    fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=true')
     .then((response) => response.json())
     .then((responseJson) => {
+
+      this.setState({chartColorOnChange: true})
       this.setState({
         originalData: responseJson,
         dataSource: responseJson,
         sparkLinesLoaded: true,
         refreshing: false,
-      }, function(){
-
       });
+      setInterval(() => this.setState({chartColorOnChange: false}), 1);
 
     })
     .catch((error) =>{
@@ -104,12 +108,12 @@ export default class HomeScreen extends React.Component {
 
 
   async globalStats(){
-    return fetch('https://api.coinmarketcap.com/v1/global/')
+    return fetch('https://api.coingecko.com/api/v3/global')
     .then((response) => response.json())
     .then((responseJson) => {
 
       this.setState({
-        dataSourceGlobal: responseJson,
+        dataSourceGlobal: responseJson.data,
         globalIsLoaded: true,
       }, function(){
 
@@ -186,9 +190,10 @@ export default class HomeScreen extends React.Component {
         // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
-        onPress={() => this.props.navigation.navigate('ProfileScreen', coin)}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.originalData} )}
         // onPress={() => this.setState({overlay: true})}
         fetchIndex={this.state.fetchIndex}
+        chartColorOnChange={this.state.chartColorOnChange}
       />
     )
   }
@@ -231,11 +236,10 @@ export default class HomeScreen extends React.Component {
           }>
         <View style={styles.homeHeader}>
           <Text style={styles.homeHeaderTitle}>All Cryptos</Text>
-          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Total market cap:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_market_cap_usd, 2) }</Text></View>
-          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>24h Volume:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_24h_volume_usd, 2) }</Text></View>
-          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Bitcoin dominance:</Text><Text style={styles.homeHeaderText}>{global.bitcoin_percentage_of_market_cap}%</Text></View>
-          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Active Currencies:</Text><Text style={styles.homeHeaderText}>{global.active_currencies}</Text></View>
-          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Active Assets:</Text><Text style={styles.homeHeaderText}>{global.active_assets}</Text></View>
+          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Total market cap:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_market_cap.usd, 2) }</Text></View>
+          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>24h volume:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_volume.usd, 2) }</Text></View>
+          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Bitcoin dominance:</Text><Text style={styles.homeHeaderText}>{Math.round(global.market_cap_percentage.btc*100)/100}%</Text></View>
+          <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>24h change:</Text><Text style={[styles.homeHeaderText, {color: global.market_cap_change_percentage_24h_usd > 0 ? '#00BFA5' : '#DD2C00' }]}>{Math.round(global.market_cap_change_percentage_24h_usd*100)/100}%</Text></View>
         </View>
         <View style={{flex: 1, flexDirection: 'row' }}>
           <SearchBar
@@ -276,26 +280,6 @@ export default class HomeScreen extends React.Component {
 
 
 
-
-function nFormatter(num, digits) {
-  var si = [
-    { value: 1, symbol: "" },
-    { value: 1E3, symbol: "k" },
-    { value: 1E6, symbol: "M" },
-    { value: 1E9, symbol: "B" },
-    { value: 1E12, symbol: "T" },
-    { value: 1E15, symbol: "P" },
-    { value: 1E18, symbol: "E" }
-  ];
-  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  var i;
-  for (i = si.length - 1; i > 0; i--) {
-    if (Math.abs(num) >= si[i].value) {
-      break;
-    }
-  }
-  return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
-}
 
 
 function returnHistoryRangeArray(arrayOfArrays, date){

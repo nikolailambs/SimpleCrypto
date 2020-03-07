@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Image,
@@ -13,11 +14,13 @@ import {
   Button,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 
 
 import { images } from '../Utils/CoinIcons';
 import { history } from '../Utils/HistoryHolder';
-import { Ionicons } from '@expo/vector-icons';
+import { renderPriceNumber, nFormatter } from '../Utils/Functions';
+
 
 import CoinCard from '../components/CoinCard';
 import CryptoChart from '../components/CryptoChart';
@@ -28,6 +31,21 @@ import CryptoChart from '../components/CryptoChart';
 
 
 export default class ProfileScreen extends React.Component {
+
+    static navigationOptions = ({navigation}) => {
+      return {
+          headerLeft: () => (
+            <TouchableOpacity
+              style={{alignItems:'center',justifyContent:'center', width: 50, marginLeft: 10}}
+              onPress={() => navigation.navigate('Home') }
+            >
+              <Ionicons name="ios-arrow-back" size={30} color="#a1a1a1" />
+            </TouchableOpacity>
+          ),
+      };
+  }
+
+
   constructor(props){
     super(props);
     this.state = {
@@ -42,7 +60,7 @@ export default class ProfileScreen extends React.Component {
 
   componentDidMount(){
 
-    fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.id}/market_chart?vs_currency=usd&days=max`)
+    fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.coin.id}/market_chart?vs_currency=usd&days=max`)
     .then((response) => response.json())
     .then((responseJson) => {
 
@@ -67,13 +85,13 @@ export default class ProfileScreen extends React.Component {
 
 
   fetchWeek = () => {
-    if (this.props.navigation.state.params.sparkline_in_7d) { // if already loaded sparklines
-      let week = this.props.navigation.state.params.sparkline_in_7d.price;
+    if (this.props.navigation.state.params.coin.sparkline_in_7d) { // if already loaded sparklines
+      let week = this.props.navigation.state.params.coin.sparkline_in_7d.price;
       week = addTimeToWeekArray(week);
       this.setState({ historyData: week })
     }else{
       this.setState({fetchingAddData: true})
-      fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.id}/market_chart?vs_currency=usd&days=7`)
+      fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.coin.id}/market_chart?vs_currency=usd&days=7`)
       .then((response) => response.json())
       .then((responseJson) => {
 
@@ -93,23 +111,34 @@ export default class ProfileScreen extends React.Component {
 
 
   fetchDay = () => {
-    fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.id}/market_chart?vs_currency=usd&days=1`)
-    .then((response) => response.json())
-    .then((responseJson) => {
-      let results = responseJson.prices;
-      this.setState({
-        historyData: results,
+    if (this.props.navigation.state.params.coin.sparkline_in_7d) { // if already loaded sparklines
+      let week = this.props.navigation.state.params.coin.sparkline_in_7d.price;
+      // var today = new Date();
+      var yesterday = new Date(new Date().setDate(new Date().getDate()-1));
+      console.log(yesterday)
+
+      day = returnHistoryRangeArray( addTimeToWeekArray(week), yesterday )
+      this.setState({ historyData: day })
+
+    }else{
+      fetch(`https://api.coingecko.com/api/v3/coins/${this.props.navigation.state.params.coin.id}/market_chart?vs_currency=usd&days=1`)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        let results = responseJson.prices;
+        this.setState({
+          historyData: results,
+        })
       })
-    })
-    .catch((error) =>{
-      console.error(error);
-    });
+      .catch((error) =>{
+        console.error(error);
+      });
+    } // end of if already loaded
   }
 
 
 
   fetchAdditionalInfos = () => {
-    fetch(`https://data.messari.io/api/v2/assets/${this.props.navigation.state.params.symbol}/profile`)
+    fetch(`https://data.messari.io/api/v2/assets/${this.props.navigation.state.params.coin.symbol}/profile`)
     .then((response) => response.json())
     .then((responseJson) => {
       this.setState({
@@ -182,7 +211,20 @@ export default class ProfileScreen extends React.Component {
 
   render() {
 
-    let coin = this.props.navigation.state.params;
+    let coin = this.props.navigation.state.params.coin;
+    let allCryptosData = this.props.navigation.state.params.allCryptosData;
+
+    // select next and previous coin
+    let coinArrayIndex = coin.market_cap_rank - 1;
+
+    let nextCoinIndex = coinArrayIndex == allCryptosData.length - 1 ? 0 : coinArrayIndex + 1;
+    let nextCoin = allCryptosData[nextCoinIndex];
+
+    let prevCoinIndex = coinArrayIndex == 0 ? allCryptosData.length - 1 : coinArrayIndex - 1;
+    let prevCoin = allCryptosData[prevCoinIndex];
+
+    // console.log(nextCoin)
+
 
     let coinChange = this.state.tooltipChange ? this.state.tooltipChange : Math.round(coin.price_change_percentage_24h*100)/100;
     if (this.state.tooltipChange === 0) {
@@ -193,40 +235,50 @@ export default class ProfileScreen extends React.Component {
       ? images[coin.symbol.toLowerCase()]
       : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
 
+    var nextCoinIcon = images[nextCoin.symbol.toLowerCase()]
+      ? images[nextCoin.symbol.toLowerCase()]
+      : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
+
+    var prevCoinIcon = images[prevCoin.symbol.toLowerCase()]
+      ? images[prevCoin.symbol.toLowerCase()]
+      : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
+
 
     // messari data
-    let governance = null;
-    let consensus = null;
-    let description = null;
+    let governance = 'no info';
+    let consensus = 'no info';
+    let description = 'no info';
 
     if (this.state.messariData) {
-    // governance
-      if ( this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type == null ) {
-        governance = "Off-Chain";
-      }else if( this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type.startsWith("No") ){
-        governance = "Off-Chain";
-      }else{
-        governance = this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type;
-      }
-    // governance
-      if ( this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism == null ) {
-        consensus = "n/a";
-      }else if( this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism == "" ){
-        consensus = "n/a";
-      }else{
-        consensus = this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism;
-      }
+      if (!this.state.messariData.status.error_code) {
+      // governance
+        if ( this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type == null ) {
+          governance = "Off-Chain";
+        }else if( this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type.startsWith("No") ){
+          governance = "Off-Chain";
+        }else{
+          governance = this.state.messariData.data.profile.governance.onchain_governance.onchain_governance_type;
+        }
+      // governance
+        if ( this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism == null ) {
+          consensus = "n/a";
+        }else if( this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism == "" ){
+          consensus = "n/a";
+        }else{
+          consensus = this.state.messariData.data.profile.economics.consensus_and_emission.consensus.general_consensus_mechanism;
+        }
 
-    // description
-      description = this.state.messariData.data.profile.general.overview.project_details.split(' ');
+      // description
+        description = this.state.messariData.data.profile.general.overview.project_details.split(' ');
 
-      for(var i=0; i < description.length; i++) {
-        description[i] = description[i].replace(/<a/g, '');
-        description[i] = description[i].replace(/href.*\">/g, '');
-        description[i] = description[i].replace(/<\/a>/g, '');
+        for(var i=0; i < description.length; i++) {
+          description[i] = description[i].replace(/<a/g, '');
+          description[i] = description[i].replace(/href.*\">/g, '');
+          description[i] = description[i].replace(/<\/a>/g, '');
+        }
+        description = description.join(' ').replace(/\s+/g, ' ');
+
       }
-      description = description.join(' ').replace(/\s+/g, ' ');
-
     }
 
 
@@ -234,11 +286,29 @@ export default class ProfileScreen extends React.Component {
     return(
       <ScrollView scrollEnabled={this.state.allowScroll} style={styles.container}>
         <View style={styles.headerWrapper}>
-          <View style={styles.headerContent} >
-            <Image
-              style={styles.image}
-              source={ icon }
-            />
+          <View style={styles.headerContent}>
+
+            <View style={styles.imageContainer}>
+              <TouchableOpacity onPress={()=> this.props.navigation.push('ProfileScreen', {coin: prevCoin, allCryptosData: allCryptosData}) }>
+                <Image
+                  style={styles.nextImage}
+                  source={ prevCoinIcon }
+                />
+              </TouchableOpacity>
+
+              <Image
+                style={styles.image}
+                source={ icon }
+              />
+
+              <TouchableOpacity onPress={()=> this.props.navigation.push('ProfileScreen', {coin: nextCoin, allCryptosData: allCryptosData}) }>
+                <Image
+                  style={styles.nextImage}
+                  source={ nextCoinIcon }
+                />
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.ovalShadow} />
             <Text style={styles.nameText} >{coin.name}</Text>
           </View>
@@ -249,7 +319,7 @@ export default class ProfileScreen extends React.Component {
             this.state.tooltipValue ?
             this.state.tooltipValue
             :
-            numberWithCommas(coin.current_price)
+            renderPriceNumber(coin.current_price)
           }</Text>
           {
             // coinChange > 0 ?
@@ -314,12 +384,12 @@ export default class ProfileScreen extends React.Component {
           <View style={styles.infoCards}>
             <Ionicons name="ios-cube" size={35} color="#3a3a3a" style={styles.infoIcon} />
             <Text style={styles.infoTitle}>Token type:</Text>
-            <Text style={styles.infoValue}>{this.state.messariData ? this.state.messariData.data.profile.economics.token.token_type : null}</Text>
+            <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_type : 'no info'}</Text>
           </View>
           <View style={styles.infoCards}>
             <Ionicons name="ios-navigate" size={35} color="#3a3a3a" style={styles.infoIcon} />
             <Text style={styles.infoTitle}>Token usage:</Text>
-            <Text style={styles.infoValue}>{this.state.messariData ? this.state.messariData.data.profile.economics.token.token_usage : null}</Text>
+            <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_usage : 'no info'}</Text>
           </View>
           <View style={styles.infoCards}>
             <Ionicons name="ios-git-pull-request" size={35} color="#3a3a3a" style={styles.infoIcon} />
@@ -329,12 +399,12 @@ export default class ProfileScreen extends React.Component {
           <View style={styles.infoCards}>
             <Ionicons name="ios-apps" size={35} color="#3a3a3a" style={styles.infoIcon} />
             <Text style={styles.infoTitle}>Category:</Text>
-            <Text style={styles.infoValue}>{this.state.messariData ? this.state.messariData.data.profile.general.overview.category : null}</Text>
+            <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overview.category : 'no info'}</Text>
           </View>
           <View style={styles.infoCards}>
             <Ionicons name="ios-archive" size={35} color="#3a3a3a" style={styles.infoIcon} />
             <Text style={styles.infoTitle}>Sector:</Text>
-            <Text style={styles.infoValue}>{this.state.messariData ? this.state.messariData.data.profile.general.overview.sector : null}</Text>
+            <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overview.sector : 'no info'}</Text>
           </View>
 
           <View style={styles.coinDescription}>
@@ -370,45 +440,6 @@ function returnHistoryRangeArray(arrayOfArrays, date){
 }
 
 
-
-function renderPriceNumber(x){
-  if(x >= 1000){
-    return(numberWithCommas(parseFloat(x).toFixed(1)))
-  }else if(x >= 100){
-    return(numberWithCommas(parseFloat(x).toFixed(2)))
-  }else if(x >= 10){
-    return(numberWithCommas(parseFloat(x).toFixed(3)))
-  }else{
-    return(numberWithCommas(parseFloat(x).toFixed(4)))
-  }
-}
-
-function numberWithCommas(x) {
-  var parts = x.toString().split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return parts.join(".");
-}
-
-
-function nFormatter(num, digits) {
-  var si = [
-    { value: 1, symbol: "" },
-    { value: 1E3, symbol: "k" },
-    { value: 1E6, symbol: "M" },
-    { value: 1E9, symbol: "B" },
-    { value: 1E12, symbol: "T" },
-    { value: 1E15, symbol: "P" },
-    { value: 1E18, symbol: "E" }
-  ];
-  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  var i;
-  for (i = si.length - 1; i > 0; i--) {
-    if (Math.abs(num) >= si[i].value) {
-      break;
-    }
-  }
-  return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
-}
 
 
 
@@ -448,9 +479,21 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#f8f8f8',
   },
+  imageContainer: {
+    flex: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+  },
   image: {
     width: 60,
     height: 60,
+  },
+  nextImage: {
+    width: 50,
+    height: 50,
+    opacity: 0.5,
   },
   imageShadow: {
     width: 60,
@@ -578,6 +621,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowColor: '#d1d1d1',
     shadowOffset: { height: 5, width: 3 },
+    marginBottom: 80,
   },
 })
 

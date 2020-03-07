@@ -19,6 +19,8 @@ import { Line, LinearGradient, Path } from 'react-native-svg';
 
 import { images } from '../Utils/CoinIcons';
 import { colors } from '../Utils/CoinColors';
+import { renderPriceNumber } from '../Utils/Functions';
+
 import CryptoChart from './CryptoChart';
 
 const { UIManager } = NativeModules;
@@ -83,11 +85,24 @@ render(){
   var transparent = color + '33'
 
 
+  var areaFill = 'rgba(207, 207, 207, 0.2)';
+  var sparkLine = 'rgba(207, 207, 207, 1)';
+  if (this.props.sparkLinesLoaded) {
+    if (this.props.chartColorOnChange) {
+      areaFill = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.2)' : 'rgba(221, 44, 0, 0.2)';
+      sparkLine = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 1)' : 'rgba(221, 44, 0, 1)';
+    }else{
+      areaFill = 'rgba(102, 122, 255, 0.2)';
+      sparkLine = 'rgba(102, 122, 255, 1)';
+    }
+  }
+
+
   const Line = ({ line }) => (
     <Path
       key={'line'}
       d={line}
-      stroke={this.props.sparkLinesLoaded ? '#4141ff' : '#cfcfcf'}
+      stroke={ sparkLine }
       strokeWidth={2}
       fill={'none'}
     />
@@ -117,7 +132,7 @@ render(){
                     data={ this.props.sparkLines }
                     curve={shape.curveNatural}
                     svg={{
-                      fill: this.props.sparkLinesLoaded ? 'rgba(102, 122, 255, 0.2)' : 'rgba(207, 207, 207, 0.2)',
+                      fill: areaFill,
                     }}
                     contentInset={ { top: 10, bottom: 10 } }
                 >
@@ -126,7 +141,7 @@ render(){
               </View>
 
               <View style={{width: 100}}>
-                <Text style={coinPrice}>{numberWithCommas(getlength(this.props.price))}
+                <Text style={coinPrice}>{renderPriceNumber(getlength(this.props.price))}
                   <Text style={moneySymbol}>$</Text>
                 </Text>
                 <Text style={this.props.percentChange < 0 ? coinPerce24Minus : coinPerce24Plus }> {Math.round(this.props.percentChange*100)/100}
@@ -141,11 +156,6 @@ render(){
   }
 }
 
-function numberWithCommas(x) {
-  var parts = x.toString().split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return parts.join(".");
-}
 
 
 // prices

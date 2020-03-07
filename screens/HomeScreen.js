@@ -54,7 +54,7 @@ export default class HomeScreen extends React.Component {
   this.getCryptos()
   this.globalStats()
   this.getSparkLines()
-  this.interval = setInterval(() => this.getSparkLines(), 30000);
+  // this.interval = setInterval(() => this.getSparkLines(), 30000);
   // funktioniert:
   // this.timer = setInterval(()=> this.getCryptos(), 5000)
  }

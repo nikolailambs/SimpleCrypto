@@ -34,6 +34,18 @@ export default class CryptoChart extends React.PureComponent {
         // The gesture has started. Show visual feedback so the user knows
         // what is happening!
         // gestureState.d{x,y} will be set to zero PushNotificationIOS.=(NewData, NoData, ResultFailed, }, static, (, :)
+
+        console.log('Start of touch');
+        this.long_press_timeout = setTimeout(function(){
+          console.log('___');
+          console.log('___');
+          console.log('long touch');
+          console.log('___');
+          console.log('___');
+        },
+        1000);
+
+
         this.props.setScroll(false) // disable scroll
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
@@ -71,6 +83,8 @@ export default class CryptoChart extends React.PureComponent {
           this.passTooltipToParent({valueOne: evt.nativeEvent.touches[0].locationX, valueTwo: evt.nativeEvent.touches[1].locationX})
         }
 
+        clearTimeout(this.long_press_timeout);
+
         // pass values to parent
 
 
@@ -79,18 +93,20 @@ export default class CryptoChart extends React.PureComponent {
       onPanResponderRelease: (evt, gestureState) => {
         // The user has released all touches while this view is the
         // responder. This typically means a gesture has succeeded
-          this.props.setScroll(true) // disable scroll
+          this.props.setScroll(true) // enable scroll
           this.props.setPriceValue(false) // disable tooltip
           this.props.setChangeValue(false) // disable tooltip
           this.setState({tooltipOne: false, tooltipTwo: false})
+          clearTimeout(this.long_press_timeout);
       },
       onPanResponderTerminate: (evt, gestureState) => {
         // Another component has become the responder, so this gesture
         // should be cancelled
-          this.props.setScroll(true) // disable scroll
+          this.props.setScroll(true) // enable scroll
           this.props.setPriceValue(false) // disable tooltip
           this.props.setChangeValue(false) // disable tooltip
           this.setState({tooltipOne: false, tooltipTwo: false})
+          clearTimeout(this.long_press_timeout);
       },
       onShouldBlockNativeResponder: (evt, gestureState) => {
         // Returns whether this component should block native components from becoming the JS
@@ -459,10 +475,10 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     backgroundColor: '#ffffff',
     borderRadius: 15,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowColor: '#d1d1d1',
-    shadowOffset: { height: 5, width: 3 },
+    // shadowOpacity: 0.3,
+    // shadowRadius: 8,
+    // shadowColor: '#d1d1d1',
+    // shadowOffset: { height: 5, width: 3 },
   },
   button: {
     flex: 1,

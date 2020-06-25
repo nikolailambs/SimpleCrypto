@@ -425,4 +425,7 @@ zest: '#07bc9c',
 zil: '#49c1bf',
 zilla: '#00004d',
 zrx: '#302c2c',
+snx: '#161324',
+// ADDED DrawerLayoutAndroid.openDrawer
+comp: '#00D395',
 };

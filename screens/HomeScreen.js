@@ -12,6 +12,7 @@ import {
   FlatList,
   RefreshControl,
   TouchableHighlight,
+  Animated
 } from 'react-native';
 import { SearchBar } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ import CoinCard from '../components/CoinCard';
 import OverlayScreen from './OverlayScreen';
 
 import { MonoText } from '../components/StyledText';
+import Moment from 'moment';
 
 import { nFormatter } from '../Utils/Functions';
 
@@ -34,11 +36,11 @@ export default class HomeScreen extends React.Component {
       refreshing: false,
       globalIsLoaded: false,
       overlay: false,
-      fetchIndex: 10,
       search: '',
       sort: 'market_cap_rank',
       resorting: false,
-      chartColorOnChange: false
+      chartColorOnChange: false,
+      scrollDown: 0,
     }
   };
 
@@ -165,6 +167,13 @@ export default class HomeScreen extends React.Component {
   }
 
 
+  handleScroll = (event: Object) => {
+    if (event.nativeEvent.contentOffset.y < 0) {
+      this.setState({scrollDown: event.nativeEvent.contentOffset.y});
+    }
+  }
+
+
 
   renderCoinCards() {
     const crypto = this.state.dataSource
@@ -190,8 +199,9 @@ export default class HomeScreen extends React.Component {
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
         onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.originalData} )}
+        // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
-        fetchIndex={this.state.fetchIndex}
+        // fetchIndex={this.state.fetchIndex}
         chartColorOnChange={this.state.chartColorOnChange}
       />
     )
@@ -224,13 +234,14 @@ export default class HomeScreen extends React.Component {
         <ScrollView
           contentContainerStyle={styles.contentContainer}
           // scrolling
-          onScroll={() => this.setState({fetchIndex: this.state.fetchIndex + 1 })}
-          scrollEventThrottle={600}
+          onScroll={this.handleScroll}
+          scrollEventThrottle={16}
           // refreshing
           refreshControl={
             <RefreshControl
               refreshing={this.state.refreshing}
               onRefresh={this._onRefresh}
+              title={Moment(global.updated_at*1000).format('MMMM Do YYYY, h:mm:ss a')}
             />
           }>
         <View style={styles.homeHeader}>
@@ -246,7 +257,7 @@ export default class HomeScreen extends React.Component {
             onChangeText={this.updateSearch}
             value={this.state.search}
             containerStyle={{backgroundColor: 'transparent', borderWidth: 0, shadowColor: 'white', borderBottomColor: 'transparent', borderTopColor: 'transparent', marginBottom: 10, width: '85%'}}
-            inputContainerStyle={{backgroundColor: '#ffffff', borderRadius: 20}}
+            inputContainerStyle={{backgroundColor: '#f8f8f8', borderRadius: 20}}
           />
           <TouchableOpacity
             onPress={() => this.sorting()} 
@@ -324,7 +335,7 @@ HomeScreen.navigationOptions = {
 const styles = StyleSheet.create({
   contentContainer: {
     paddingTop: 30,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
   },
   homeHeader: {
     // height: 200,

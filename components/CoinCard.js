@@ -30,6 +30,8 @@ UIManager.setLayoutAnimationEnabledExperimental &&
 
 
 
+
+
 export default class CoinCard extends React.Component {
   constructor(props){
     super(props)
@@ -73,10 +75,9 @@ render(){
   // }
 
 
-
   var icon = images[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    : require("../node_modules/cryptocurrency-icons/128/black/generic.png");
+    : require("../node_modules/cryptocurrency-icons/128/white/generic.png");
 
   var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
@@ -108,6 +109,8 @@ render(){
     />
   )
 
+
+
   return (
     // const { rank, symbol, coinName, price, percent_change_1h, percentChange, percent_change_7d, onPress } = this.props
       <TouchableHighlight
@@ -117,7 +120,7 @@ render(){
 
           <View style={{flex: 1, flexDirection: 'row'}}>
             <Image
-              style={styles.image}
+              style={[styles.image, {backgroundColor: color}]}
               source={ icon }
             />
             <View>
@@ -193,11 +196,13 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: 'white',
     borderRadius: 8,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowColor: '#d1d1d1',
-    shadowOffset: { height: 5, width: 3 },
+    // shadowOpacity: 0.3,
+    // shadowRadius: 8,
+    // shadowColor: '#d1d1d1',
+    // shadowOffset: { height: 5, width: 3 },
     zIndex: 2,
+    // borderBottomWidth: 1,
+    // borderColor: '#f4f4f4'
   },
   upperRow: {
     display: "flex",
@@ -248,6 +253,9 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     width: 45,
     height: 45,
+    borderRadius: 150 / 2,
+    borderWidth: 1,
+    borderColor: '#ffffff'
   },
   moneySymbol: {
     fontWeight: 'normal',

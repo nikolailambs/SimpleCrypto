@@ -31,7 +31,7 @@ const HomeStack = createStackNavigator({
         elevation: 0,
         shadowOpacity: 0,
         borderBottomWidth: 0,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#ffffff',
       },
       headerTintColor: '#a1a1a1',
     }
@@ -42,7 +42,7 @@ const HomeStack = createStackNavigator({
 
 HomeStack.navigationOptions = {
   tabBarLabel: 'All',
-  tabBarVisible: false,
+  tabBarVisible: true, // if FALSE then hide bar, if TRUE then show bar
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
@@ -69,7 +69,7 @@ const LinksStack = createStackNavigator(
 
 
 LinksStack.navigationOptions = {
-  tabBarLabel: 'Links',
+  tabBarLabel: 'Wallet',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
   ),
@@ -108,3 +108,5 @@ const tabNavigator = createBottomTabNavigator({
 // tabNavigator.path = '';
 
 export default tabNavigator;
+
+

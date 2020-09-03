@@ -248,7 +248,6 @@ export default class ProfileScreen extends React.Component {
 
 
   render() {
-
     let coin = this.props.navigation.state.params.coin;
     let allCryptosData = this.props.navigation.state.params.allCryptosData;
 

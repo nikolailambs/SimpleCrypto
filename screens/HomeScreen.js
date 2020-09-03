@@ -18,7 +18,7 @@ import { SearchBar } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
 
 import CoinCard from '../components/CoinCard';
-import OverlayScreen from './OverlayScreen';
+// import OverlayScreen from './OverlayScreen';
 
 import { MonoText } from '../components/StyledText';
 import Moment from 'moment';
@@ -202,7 +202,7 @@ export default class HomeScreen extends React.Component {
         // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
-        chartColorOnChange={this.state.chartColorOnChange}
+        // chartColorOnChange={this.state.chartColorOnChange}
       />
     )
   }
@@ -234,8 +234,8 @@ export default class HomeScreen extends React.Component {
         <ScrollView
           contentContainerStyle={styles.contentContainer}
           // scrolling
-          onScroll={this.handleScroll}
-          scrollEventThrottle={16}
+          // onScroll={this.handleScroll}
+          // scrollEventThrottle={16}
           // refreshing
           refreshControl={
             <RefreshControl

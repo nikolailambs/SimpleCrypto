@@ -39,7 +39,12 @@ const HomeStack = createStackNavigator({
 });
 
 
-
+//
+//
+//
+//
+//
+// SHOWING AND HIDING THE TAB BAR HERE
 HomeStack.navigationOptions = {
   tabBarLabel: 'All',
   tabBarVisible: true, // if FALSE then hide bar, if TRUE then show bar
@@ -48,8 +53,8 @@ HomeStack.navigationOptions = {
       focused={focused}
       name={
         Platform.OS === 'ios'
-          ? `ios-information-circle${focused ? '' : '-outline'}`
-          : 'md-information-circle'
+          ? `ios-list${focused ? '' : ''}`
+          : 'md-list'
       }
     />
   ),
@@ -69,9 +74,9 @@ const LinksStack = createStackNavigator(
 
 
 LinksStack.navigationOptions = {
-  tabBarLabel: 'Wallet',
+  tabBarLabel: 'Dashboard',
   tabBarIcon: ({ focused }) => (
-    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
+    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-flame' : 'md-flame'} />
   ),
 };
 
@@ -90,7 +95,7 @@ const SettingsStack = createStackNavigator(
 SettingsStack.navigationOptions = {
   tabBarLabel: 'Settings',
   tabBarIcon: ({ focused }) => (
-    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-options' : 'md-options'} />
+    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-cog' : 'md-cog'} />
   ),
 };
 

@@ -15,7 +15,7 @@ import { createStackNavigator } from 'react-navigation';
 
 import { LineChart, YAxis, Grid, AreaChart } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
-import { Line, LinearGradient, Path } from 'react-native-svg';
+import { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { images } from '../Utils/CoinIcons';
 import { colors } from '../Utils/CoinColors';
@@ -90,11 +90,11 @@ render(){
   var sparkLine = 'rgba(207, 207, 207, 1)';
   if (this.props.sparkLinesLoaded) {
     // if (this.props.chartColorOnChange) {
-    //   areaFill = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.2)' : 'rgba(221, 44, 0, 0.2)';
-    //   sparkLine = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 1)' : 'rgba(221, 44, 0, 1)';
+      areaFill = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.1)' : 'rgba(221, 44, 0, 0.1)';
+      sparkLine = this.props.percentChange > 0 ? 'rgba(0, 191, 165, 0.6)' : 'rgba(221, 44, 0, 0.6)';
     // }else{
-      areaFill = 'rgba(102, 122, 255, 0.2)';
-      sparkLine = 'rgba(102, 122, 255, 1)';
+      // areaFill = 'rgba(102, 122, 255, 0.2)';
+      // sparkLine = 'rgba(102, 122, 255, 1)';
     // }
   }
 
@@ -110,12 +110,24 @@ render(){
   )
 
 
+  let linearGradientOffset = `${Math.abs(Math.round(this.props.percentChange)/2)}%`
+
+  const Gradient = ({ index }) => (
+    <Defs key={index}>
+        <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'0%'} y2={'100%'}>
+            <Stop offset={'0%'} stopColor={areaFill} stopOpacity={0.1}/>
+            <Stop offset={ linearGradientOffset } stopColor={areaFill} stopOpacity={0}/>
+        </LinearGradient>
+    </Defs>
+  )
+
+
 
   return (
     // const { rank, symbol, coinName, price, percent_change_1h, percentChange, percent_change_7d, onPress } = this.props
       <TouchableHighlight
         onPress={() => this.props.onPress()} 
-        underlayColor='transparent'>
+        underlayColor='#f4f4f4'>
         <View style={cardContainer}>
 
           <View style={{flex: 1, flexDirection: 'row'}}>
@@ -135,11 +147,12 @@ render(){
                     data={ this.props.sparkLines }
                     curve={shape.curveNatural}
                     svg={{
-                      fill: areaFill,
+                      fill: 'url(#gradient)',
                     }}
                     contentInset={ { top: 10, bottom: 10 } }
                 >
-                <Line/>
+                  <Gradient/>
+                  <Line/>
                 </AreaChart>
               </View>
 
@@ -189,13 +202,12 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: 'space-between',
-    backgroundColor: '#000000',
+    // backgroundColor: '#000000',
     marginBottom: 20,
     padding: 10,
     marginLeft: 10,
     marginRight: 10,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    // borderRadius: 8,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',

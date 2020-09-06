@@ -14,6 +14,7 @@ import {
   Button,
   Animated,
   Easing,
+  AsyncStorage,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { images } from '../Utils/CoinIconsColor';
 import { history } from '../Utils/HistoryHolder';
-import { renderPriceNumber, nFormatter } from '../Utils/Functions';
+import { renderPriceNumber, nFormatter, renderPricePrecentage } from '../Utils/Functions';
 
 
 import CoinCard from '../components/CoinCard';
@@ -34,18 +35,7 @@ import CryptoChart from '../components/CryptoChart';
 
 export default class ProfileScreen extends React.Component {
 
-    static navigationOptions = ({navigation}) => {
-      return {
-          headerLeft: () => (
-            <TouchableOpacity
-              style={{alignItems:'center',justifyContent:'center', width: 50, marginLeft: 10}}
-              onPress={() => navigation.navigate('Home') }
-            >
-              <Ionicons name="ios-arrow-back" size={30} color="#a1a1a1" />
-            </TouchableOpacity>
-          ),
-      };
-  }
+
 
 
   constructor(props){
@@ -57,6 +47,7 @@ export default class ProfileScreen extends React.Component {
       historyData: [[1,1], [2,2], [3,3], [4,2], [5,1], [6,1], [7,2], [8,3]],
       scrollDown: 0,
       refreshing: false,
+      favoriteCoinsLoaded: false,
     }
     this.animatedScrollValue = new Animated.Value(0);
   };
@@ -73,9 +64,45 @@ export default class ProfileScreen extends React.Component {
 
 
   componentDidMount(){
-    this.mainFetch()
-    this.fetchAdditionalInfos()
+    this.mainFetch();
+    this.fetchAdditionalInfos();
+    this.getFavoriteCoins();
   }
+
+
+
+  getFavoriteCoins = async () => {
+    try {
+      let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
+      this.setState({
+        favoriteCoins: JSON.parse(favoriteCoins),
+        favoriteCoinsLoaded: true,
+      });
+    } catch (error) {
+      // Error retrieving data
+    }
+  }
+
+
+  toggleFavoriteCoins = async () => {
+    let favCoinsArray = this.state.favoriteCoins;
+    let thisCoin = this.props.navigation.state.params.coin.id;
+    if ( favCoinsArray.includes(thisCoin) ) {
+      favCoinsArray.splice(favCoinsArray.indexOf(thisCoin), 1);
+    }else{
+      favCoinsArray.push(thisCoin);
+    }
+
+    try {
+      let favoriteCoins = await AsyncStorage.setItem('favoriteCoins', JSON.stringify(favCoinsArray));
+      this.setState({
+        favoriteCoins: favCoinsArray
+      });
+    } catch (error) {
+      // Error retrieving data
+    }
+  }
+
 
 
   mainFetch = () => {
@@ -262,7 +289,6 @@ export default class ProfileScreen extends React.Component {
     let prevCoinIndex = coinArrayIndex == 0 ? allCryptosData.length - 1 : coinArrayIndex - 1;
     let prevCoin = allCryptosData[prevCoinIndex];
 
-    // console.log(nextCoin)
 
 
     let coinChange = this.state.tooltipChange ? this.state.tooltipChange : Math.round(coin.price_change_percentage_24h*100)/100;
@@ -272,15 +298,15 @@ export default class ProfileScreen extends React.Component {
 
     var icon = images[coin.symbol.toLowerCase()]
       ? images[coin.symbol.toLowerCase()]
-      : require("../node_modules/cryptocurrency-icons/128/color/generic.png");
+      : {uri: coin.image};
 
     var nextCoinIcon = images[nextCoin.symbol.toLowerCase()]
       ? images[nextCoin.symbol.toLowerCase()]
-      : require("../node_modules/cryptocurrency-icons/128/color/generic.png");
+      : {uri: nextCoin.image};
 
     var prevCoinIcon = images[prevCoin.symbol.toLowerCase()]
       ? images[prevCoin.symbol.toLowerCase()]
-      : require("../node_modules/cryptocurrency-icons/128/color/generic.png");
+      : {uri: prevCoin.image};
 
 
     // messari data
@@ -322,6 +348,14 @@ export default class ProfileScreen extends React.Component {
       }
       // end of if description exists
 
+      }
+    }
+
+
+    let coinExisting = false;
+    if (this.state.favoriteCoinsLoaded) {
+      if (this.state.favoriteCoins.includes(coin.id)) {
+        coinExisting = true;
       }
     }
 
@@ -385,7 +419,7 @@ export default class ProfileScreen extends React.Component {
             // :
             //   <Ionicons name="ios-arrow-down" size={32} color="#DD2C00" />
             }
-            <Text style={this.state.tooltipValue && !this.state.tooltipChange || coinChange == 0 ? styles.coinPerceGray : coinChange < 0 ? styles.coinPerce24Minus : styles.coinPerce24Plus}>{coinChange} %</Text>
+            <Text style={this.state.tooltipValue && !this.state.tooltipChange || coinChange == 0 ? styles.coinPerceGray : coinChange < 0 ? styles.coinPerce24Minus : styles.coinPerce24Plus}>{renderPricePrecentage(coinChange)} %</Text>
         </View>
 
             <View>
@@ -404,7 +438,17 @@ export default class ProfileScreen extends React.Component {
 
             </View>
 
-        <View style={{marginTop: 40}}>
+            <View style={styles.starWrapper}>
+              <Ionicons
+                name={`ios-star${coinExisting ? '' : '-outline'}`}
+                size={35}
+                color={coinExisting ? "#ffe400" : "#a1a1a1"}
+                style={styles.starIcon}
+                onPress={() => { this.toggleFavoriteCoins() }}
+              />
+            </View>
+
+        <View>
 
           <View style={styles.infoCards}>
             <View style={styles.infoBlockWrapper}>
@@ -524,7 +568,6 @@ function returnHistoryRangeArray(arrayOfArrays, date){
   let newArrayOfArrays = []
 
   arrayOfArrays.forEach(function(array) {
-    // console.log(userData.username);
     if (array[0] >= millis) {
       newArrayOfArrays.push(array)
     };
@@ -556,7 +599,6 @@ function addTimeToWeekArray(arrayPrices) {
   let i = 0;
 
   arrayPrices.forEach(function(price) {
-    // console.log(userData.username);
     result.push( [reversedTime[i], price] );
     i += 1;
   });
@@ -580,11 +622,13 @@ const styles = StyleSheet.create({
   image: {
     width: 60,
     height: 60,
+    borderRadius: 60,
   },
   nextImage: {
     width: 50,
     height: 50,
     opacity: 0.3,
+    borderRadius: 60,
   },
   imageShadow: {
     width: 60,
@@ -657,6 +701,13 @@ const styles = StyleSheet.create({
   },
   selected: {
     color: '#fc0018',
+  },
+  starWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    width: '100%',
+  },
+  starIcon: {
   },
   infoCards: {
     flex: 1,

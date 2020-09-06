@@ -29,7 +29,7 @@ export default class HomeScreen extends React.Component {
       hotCoinsLoading: true,
       sparklinesLoaded: false,
       refreshing: false,
-
+      favCoinsHistoryLoaded: false,
       favoriteCoinsLoaded: false,
       favoriteCoins: [],
     }
@@ -40,23 +40,42 @@ export default class HomeScreen extends React.Component {
   _onRefresh = () => {
     this.setState({refreshing: true});
     this.getCryptoHistory();
+    this.getFavoriteCoins();
   }
 
 
 
   componentDidMount(){
+    this.firstTimeSetFavoriteCoins();
     this.getHotCoins();
+    this.getFavoriteCoins();
   }
 
 
+  firstTimeSetFavoriteCoins = async () => {
+    try {
+      let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
+    } catch (error) {
+      // Error retrieving data
+      try {
+        let favoriteCoins = await AsyncStorage.setItem('favoriteCoins', JSON.stringify(['bitcoin']));
+      } catch (error) {
+        // Error retrieving data
+        console.log(error.message);
+      }
+    }
+  }
 
+
+// get the coin ids for the history later
   getFavoriteCoins = async () => {
     try {
-      favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
+      let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
       this.setState({
-        favoriteCoins: favoriteCoins,
+        favoriteCoins: JSON.parse(favoriteCoins),
         favoriteCoinsLoaded: true,
-      })
+      });
+      this.getFavoriteCoinsHistory();
     } catch (error) {
       // Error retrieving data
       console.log(error.message);
@@ -64,9 +83,7 @@ export default class HomeScreen extends React.Component {
   }
 
 
-
   async getHotCoins(){
-
    fetch('https://api.coingecko.com/api/v3/search/trending')
     .then((response) => response.json())
     .then((responseJson) => {
@@ -84,8 +101,9 @@ export default class HomeScreen extends React.Component {
   }
 
 
-  getCryptoHistory = async (id) => {
 
+// get all coins history
+  getCryptoHistory = async () => {
     let idArray = [];
     this.state.hotCoins.map((coin) => {
       if (coin.item) {
@@ -108,7 +126,25 @@ export default class HomeScreen extends React.Component {
     .catch((error) =>{
       console.error(error);
     });
+  }
 
+
+
+  getFavoriteCoinsHistory = async () => {
+    let idString = this.state.favoriteCoins.join('%2C');
+    console.log(idString)
+   fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${idString}&order=market_cap_desc&per_page=100&page=1&sparkline=true`)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        favCoins: responseJson,
+        refreshing: false,
+        favCoinsHistoryLoaded: true,
+      });
+    })
+    .catch((error) =>{
+      console.error(error);
+    });
   }
 
 
@@ -121,7 +157,43 @@ export default class HomeScreen extends React.Component {
 
 
 
-  renderCoinCards() {
+// Render the coin cards
+  renderFavoriteCoinCards() {
+    const favCoins = this.state.favCoins;
+
+    return favCoins.map((coin) =>
+      <DashboardCard
+        index={ favCoins.map(function(coin) { return coin.name }).indexOf(coin.name) }
+        rank={ coin.market_cap_rank }
+        coinName={ coin.name }
+        symbol={ coin.symbol }
+        price={ coin.current_price }
+        percentChange={ coin.price_change_percentage_24h }
+        marketCap={ coin.market_cap }
+        availableSupply={ coin.circulating_supply }
+        totalSupply={ coin.total_supply }
+        image={coin.image}
+        // sparklines
+        sparkLines={ groupAverage(coin.sparkline_in_7d.price.slice(Math.max(coin.sparkline_in_7d.price.length - Math.round(coin.sparkline_in_7d.price.length/7), 0)), 2) }
+        sparklinesLoaded={ true }
+        // coin history
+        // historyData={this.state.historyData}
+        // historyLoaded={this.state.historyLoaded}
+        // historyFetch={()=>this.getCryptoHistory(coin)}
+        // methods
+        setScroll={(bool)=>this.setScroll(bool)}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.favCoins, backNavigation: 'Dashboard'} )}
+        // scrollDown={this.state.scrollDown}
+        // onPress={() => this.setState({overlay: true})}
+        // fetchIndex={this.state.fetchIndex}
+        // chartColorOnChange={this.state.chartColorOnChange}
+      />
+    )
+  }
+
+
+
+  renderHotCoinCards() {
     const hotCoins = this.state.hotCoins;
 
     return hotCoins.map((coin) =>
@@ -135,6 +207,8 @@ export default class HomeScreen extends React.Component {
         marketCap={ this.state.sparklinesLoaded ? coin.market_cap : 0 }
         availableSupply={ this.state.sparklinesLoaded ? coin.circulating_supply : 0 }
         totalSupply={ this.state.sparklinesLoaded ? coin.total_supply : 0 }
+        image={coin.image}
+        // sparklines
         sparkLines={ this.state.sparklinesLoaded ? groupAverage(coin.sparkline_in_7d.price.slice(Math.max(coin.sparkline_in_7d.price.length - Math.round(coin.sparkline_in_7d.price.length/7), 0)), 2) : [1, 3, 2, 2, 3] }
         sparklinesLoaded={ this.state.sparklinesLoaded }
         // coin history
@@ -143,7 +217,7 @@ export default class HomeScreen extends React.Component {
         // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
-        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.hotCoins} )}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.hotCoins, backNavigation: 'Dashboard'} )}
         // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
@@ -159,15 +233,6 @@ export default class HomeScreen extends React.Component {
 
   render(){
 
-    // if infos are still loading
-    if(this.state.hotCoinsLoading){
-      return(
-        <View style={{flex: 1, paddingTop: 200}}>
-          <ActivityIndicator/>
-        </View>
-        )
-    }
-
     return (
       <ScrollView
         style={styles.container}
@@ -178,9 +243,31 @@ export default class HomeScreen extends React.Component {
             // title={Moment(global.updated_at*1000).format('MMMM Do YYYY, h:mm:ss a')}
           />
         }>
-        <Text style={styles.homeHeaderTitle}>🔥 Hottest Cryptos</Text>
+        <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>⭐️ Favorite Cryptos</Text>
         <View style={styles.homeHeader}>
-          {this.renderCoinCards()}
+          {this.state.favoriteCoins.length > 0 ?
+            this.state.favCoinsHistoryLoaded ?
+              this.renderFavoriteCoinCards()
+              :
+              <View style={{flex: 1, paddingTop: 100, paddingBottom: 100}}>
+                <ActivityIndicator/>
+              </View>
+            :
+            <View style={{flex: 1, alignItems: 'center'}}>
+              <Text>No favorites</Text>
+            </View>
+
+          }
+        </View>
+        <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>🔥 Hottest Cryptos</Text>
+        <View style={styles.homeHeader}>
+          { !this.state.hotCoinsLoading ?
+            this.renderHotCoinCards()
+            :
+            <View style={{flex: 1, paddingTop: 100, paddingBottom: 100}}>
+              <ActivityIndicator/>
+            </View>
+          }
         </View>
       </ScrollView>
     );
@@ -207,10 +294,6 @@ function groupAverage(arr, n) {
 
 
 
-
-// LinksScreen.navigationOptions = {
-//   title: 'Wallet',
-// };
 
 const styles = StyleSheet.create({
   container: {

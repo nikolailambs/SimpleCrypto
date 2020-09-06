@@ -65,9 +65,25 @@ HomeStack.navigationOptions = {
 HomeStack.path = '';
 
 
-const LinksStack = createStackNavigator(
-  {
-    Links: LinksScreen,
+const LinksStack = createStackNavigator({
+    Links: {
+      screen: LinksScreen,
+      navigationOptions: {
+        header: null,
+      },
+    },
+    ProfileScreen: {
+      screen: ProfileScreen,
+      navigationOptions: {
+        headerStyle: {
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
+          backgroundColor: '#ffffff',
+        },
+        headerTintColor: '#a1a1a1',
+      }
+    },
   },
   config
 );

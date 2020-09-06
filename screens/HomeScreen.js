@@ -12,7 +12,8 @@ import {
   FlatList,
   RefreshControl,
   TouchableHighlight,
-  Animated
+  Animated,
+  AsyncStorage,
 } from 'react-native';
 import { SearchBar } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,12 +54,29 @@ export default class HomeScreen extends React.Component {
 
  componentDidMount(){
 
-  this.getCryptos()
-  this.globalStats()
-  this.getSparkLines()
+  this.firstTimeSetFavoriteCoins();
+  this.getCryptos();
+  this.globalStats();
+  this.getSparkLines();
   // funktioniert:
   // this.timer = setInterval(()=> this.getSparkLines(), 5000)
  }
+
+
+
+  firstTimeSetFavoriteCoins = async () => {
+    try {
+      let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
+    } catch (error) {
+      // Error retrieving data
+      try {
+        let favoriteCoins = await AsyncStorage.setItem( 'favoriteCoins', JSON.stringify(['bitcoin']) );
+      } catch (error) {
+        // Error retrieving data
+        console.log(error.message);
+      }
+    }
+  }
 
 
 
@@ -136,10 +154,11 @@ export default class HomeScreen extends React.Component {
 
 
   updateSearch = search => {
+    console.log(search.toLowerCase())
     this.setState({ search });
     let data = this.state.originalData
     // console.log( data.filter((item) => item.name.startsWith(search)) )
-    this.setState({dataSource: data.filter((item) => item.name.startsWith(search))})
+    this.setState({ dataSource: data.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()) ) })
   }
 
 
@@ -190,6 +209,8 @@ export default class HomeScreen extends React.Component {
         marketCap={coin.market_cap}
         availableSupply={coin.circulating_supply}
         totalSupply={coin.total_supply}
+        image={coin.image}
+        // sparklines
         sparkLines={ this.state.sparkLinesLoaded ? groupAverage(coin.sparkline_in_7d.price.slice(Math.max(coin.sparkline_in_7d.price.length - Math.round(coin.sparkline_in_7d.price.length/7), 0)), 2) : [1, 3, 2, 2, 3] }
         sparkLinesLoaded={ this.state.sparkLinesLoaded }
         // coin history
@@ -198,7 +219,7 @@ export default class HomeScreen extends React.Component {
         // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
-        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.originalData} )}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.originalData, backNavigation: 'Home'} )}
         // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}

@@ -74,14 +74,13 @@ render(){
   //   }
   // }
 
-
   var icon = images[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    : require("../node_modules/cryptocurrency-icons/128/white/generic.png");
+    : {uri: this.props.image};
 
   var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    : '#4141ff';
+    : '#ffffff';
 
   var transparent = color + '33'
 

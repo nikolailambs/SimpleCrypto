@@ -15,6 +15,17 @@ export const renderPriceNumber = (x) => {
 }
 
 
+export const renderPricePrecentage = (x) => {
+  if(x >= 1000){
+    return(numberWithCommas(parseFloat(x).toFixed(0)))
+  }else if(x >= 100){
+    return(numberWithCommas(parseFloat(x).toFixed(1)))
+  }else{
+    return(numberWithCommas(parseFloat(x).toFixed(2)))
+  }
+}
+
+
 function numberWithCommas(x) {
   var parts = x.toString().split(".");
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");

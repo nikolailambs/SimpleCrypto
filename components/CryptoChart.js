@@ -47,7 +47,7 @@ export default class CryptoChart extends React.PureComponent {
 
 
         this.props.setScroll(false) // disable scroll
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         if (evt.nativeEvent.touches.length == 1) {
           this.setState({xtouch: evt.nativeEvent.locationX, tooltipOne: true})
@@ -190,8 +190,16 @@ export default class CryptoChart extends React.PureComponent {
 
     const contentInset = { top: 20, bottom: 20 };
 
+
+    //
+    //
+    //
+    //
+// THE TOOLTIP X SWIPE VALUE IS BEING DEFINED HERE
+
     // chart width
     var chartWidth = this.state.chartWidth; // better chart width also dimension works too
+    //
     // first tooltop
     let xSwipe = Math.floor((data.length) * this.state.xtouch/chartWidth);
     if (xSwipe >= data.length ) {
@@ -200,6 +208,7 @@ export default class CryptoChart extends React.PureComponent {
     if (xSwipe <= 0 ) {
       xSwipe = 0
     }
+    //
     // second Tooltip
     let xSwipeTwo = Math.floor((data.length) * this.state.xtouchTwo/chartWidth);
     if (xSwipeTwo >= data.length ) {
@@ -208,6 +217,22 @@ export default class CryptoChart extends React.PureComponent {
     if (xSwipeTwo <= 0 ) {
       xSwipeTwo = 0
     }
+
+    // FIRST Date position Values
+    let firstDatePositionValue = 0;
+    if ( this.state.xtouch < 40 ) {
+      // as we are using this with xtouch to be independent from the chart range, we need to put a threshhold on 40
+      firstDatePositionValue = 40 - this.state.xtouch >= 40 ? 40 : 40 - this.state.xtouch;
+    }else if( this.state.xtouch > chartWidth - 41 ){
+      firstDatePositionValue = - 40 + (chartWidth-this.state.xtouch) <= -40 ? -40 : - 40 + (chartWidth-this.state.xtouch);
+    };
+    // SECOND Date position Values
+    let secondDatePositionValue = 0;
+    if ( this.state.xtouchTwo < 40 ) {
+      secondDatePositionValue = 40 - this.state.xtouchTwo >= 40 ? 40 : 40 - this.state.xtouchTwo;
+    }else if( this.state.xtouchTwo > chartWidth - 41 ){
+      secondDatePositionValue = - 40 + (chartWidth-this.state.xtouchTwo) <= -40 ? -40 : - 40 + (chartWidth-this.state.xtouchTwo);
+    };
 
 // set values
     let firstDate = dates[xSwipe];
@@ -221,7 +246,7 @@ export default class CryptoChart extends React.PureComponent {
             >
                 <G y={ 345 }>
                   <Text
-                      x={ 0 }
+                      x={ firstDatePositionValue }
                       dy={ 20 }
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }
@@ -255,7 +280,7 @@ export default class CryptoChart extends React.PureComponent {
             >
                 <G y={ 345 }>
                   <Text
-                      x={ 0 }
+                      x={ secondDatePositionValue }
                       dy={ 20 }
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }

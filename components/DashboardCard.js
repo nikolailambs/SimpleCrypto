@@ -36,8 +36,6 @@ const { width } = Dimensions.get("window");
 export default class DashboardCard extends React.Component {
   constructor(props){
     super(props)
-    this.state = {
-    }
   }
 
 

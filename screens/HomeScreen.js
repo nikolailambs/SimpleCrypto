@@ -54,7 +54,7 @@ export default class HomeScreen extends React.Component {
 
  componentDidMount(){
 
-  this.firstTimeSetFavoriteCoins();
+  // this.firstTimeSetFavoriteCoins();
   this.getCryptos();
   this.globalStats();
   this.getSparkLines();

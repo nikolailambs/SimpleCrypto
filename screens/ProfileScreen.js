@@ -75,7 +75,7 @@ export default class ProfileScreen extends React.Component {
     try {
       let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
       this.setState({
-        favoriteCoins: JSON.parse(favoriteCoins),
+        favoriteCoins: favoriteCoins ? JSON.parse(favoriteCoins) : [],
         favoriteCoinsLoaded: true,
       });
     } catch (error) {
@@ -92,6 +92,9 @@ export default class ProfileScreen extends React.Component {
     }else{
       favCoinsArray.push(thisCoin);
     }
+
+    // habtic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
       let favoriteCoins = await AsyncStorage.setItem('favoriteCoins', JSON.stringify(favCoinsArray));

@@ -109,13 +109,15 @@ render(){
   )
 
 
-  let linearGradientOffset = `${Math.abs(Math.round(this.props.percentChange)/2)}%`
+  let linearGradientOffset = `${Math.abs(this.props.percentChange - this.props.percentChange*0.3)}%`;
+  console.log(linearGradientOffset)
+  // console.log(linearGradientOffset)
 
   const Gradient = ({ index }) => (
     <Defs key={index}>
         <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'0%'} y2={'100%'}>
             <Stop offset={'0%'} stopColor={areaFill} stopOpacity={0.1}/>
-            <Stop offset={ linearGradientOffset } stopColor={areaFill} stopOpacity={0}/>
+            <Stop offset={ '10%' } stopColor={areaFill} stopOpacity={0}/>
         </LinearGradient>
     </Defs>
   )

@@ -26,7 +26,7 @@ export default class HomeScreen extends React.Component {
   constructor(props){
     super(props);
     this.state ={
-      hotCoinsLoading: true,
+      hotCoinsLoaded: false,
       sparklinesLoaded: false,
       refreshing: false,
       favCoinsHistoryLoaded: false,
@@ -46,10 +46,11 @@ export default class HomeScreen extends React.Component {
 
 
   componentDidMount(){
-    this.firstTimeSetFavoriteCoins();
+    // this.firstTimeSetFavoriteCoins();
     this.getHotCoins();
     this.getFavoriteCoins();
   }
+
 
 
   firstTimeSetFavoriteCoins = async () => {
@@ -72,10 +73,14 @@ export default class HomeScreen extends React.Component {
     try {
       let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
       this.setState({
-        favoriteCoins: JSON.parse(favoriteCoins),
+        favoriteCoins: favoriteCoins ? JSON.parse(favoriteCoins) : [],
         favoriteCoinsLoaded: true,
       });
-      this.getFavoriteCoinsHistory();
+      // if favorite coins is not empty, than fetch the history
+      if (favoriteCoins) {
+        this.getFavoriteCoinsHistory();
+      };
+
     } catch (error) {
       // Error retrieving data
       console.log(error.message);
@@ -89,7 +94,7 @@ export default class HomeScreen extends React.Component {
     .then((responseJson) => {
       this.setState({
         hotCoins: responseJson.coins,
-        hotCoinsLoading: false,
+        hotCoinsLoaded: true,
       });
       this.getCryptoHistory();
 
@@ -211,10 +216,6 @@ export default class HomeScreen extends React.Component {
         // sparklines
         sparkLines={ this.state.sparklinesLoaded ? groupAverage(coin.sparkline_in_7d.price.slice(Math.max(coin.sparkline_in_7d.price.length - Math.round(coin.sparkline_in_7d.price.length/7), 0)), 2) : [1, 3, 2, 2, 3] }
         sparklinesLoaded={ this.state.sparklinesLoaded }
-        // coin history
-        // historyData={this.state.historyData}
-        // historyLoaded={this.state.historyLoaded}
-        // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
         onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.hotCoins, backNavigation: 'Dashboard'} )}
@@ -232,6 +233,7 @@ export default class HomeScreen extends React.Component {
 
 
   render(){
+
 
     return (
       <ScrollView
@@ -261,7 +263,7 @@ export default class HomeScreen extends React.Component {
         </View>
         <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>🔥 Hottest Cryptos</Text>
         <View style={styles.homeHeader}>
-          { !this.state.hotCoinsLoading ?
+          { this.state.hotCoinsLoaded ?
             this.renderHotCoinCards()
             :
             <View style={{flex: 1, paddingTop: 100, paddingBottom: 100}}>

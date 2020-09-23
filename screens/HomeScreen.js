@@ -91,8 +91,6 @@ export default class HomeScreen extends React.Component {
         dataSource: responseJson,
         refreshing: false,
         isLoading: false,
-      }, function(){
-
       });
 
     })
@@ -134,8 +132,6 @@ export default class HomeScreen extends React.Component {
       this.setState({
         dataSourceGlobal: responseJson.data,
         globalIsLoaded: true,
-      }, function(){
-
       });
 
     })
@@ -195,12 +191,13 @@ export default class HomeScreen extends React.Component {
 
 
   renderCoinCards() {
-    const crypto = this.state.dataSource
+    const crypto = this.state.dataSource;
 
     return crypto.map((coin) =>
       <CoinCard
         id={coin.id}
-        index={ crypto.map(function(coin) { return coin.name }).indexOf(coin.name) }
+        key={coin.id}
+        // index={ crypto.map(function(coin) { return coin.name }).indexOf(coin.name) }
         rank={coin.market_cap_rank}
         coinName={coin.name}
         symbol={coin.symbol}
@@ -219,7 +216,7 @@ export default class HomeScreen extends React.Component {
         // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
-        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.originalData, backNavigation: 'Home'} )}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, backNavigation: 'Home', coinDataLoaded: true} )}
         // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
@@ -262,11 +259,11 @@ export default class HomeScreen extends React.Component {
             <RefreshControl
               refreshing={this.state.refreshing}
               onRefresh={this._onRefresh}
-              title={Moment(global.updated_at*1000).format('MMMM Do YYYY, h:mm:ss a')}
+              // title={Moment(global.updated_at*1000).format('MMMM Do YYYY, h:mm:ss a')}
             />
           }>
         <View style={styles.homeHeader}>
-          <Text style={styles.homeHeaderTitle}>All Cryptos</Text>
+          <Text style={styles.homeHeaderTitle}>📦 All Cryptos</Text>
           <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Total market cap:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_market_cap.usd, 2) }</Text></View>
           <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>24h volume:</Text><Text style={styles.homeHeaderText}>$ { nFormatter(global.total_volume.usd, 2) }</Text></View>
           <View style={{flex: 1, flexDirection: 'row'}}><Text style={styles.homeHeaderTextTitle}>Bitcoin dominance:</Text><Text style={styles.homeHeaderText}>{Math.round(global.market_cap_percentage.btc*100)/100}%</Text></View>
@@ -278,7 +275,8 @@ export default class HomeScreen extends React.Component {
             onChangeText={this.updateSearch}
             value={this.state.search}
             containerStyle={{backgroundColor: 'transparent', borderWidth: 0, shadowColor: 'white', borderBottomColor: 'transparent', borderTopColor: 'transparent', marginBottom: 10, width: '85%'}}
-            inputContainerStyle={{backgroundColor: '#f8f8f8', borderRadius: 20}}
+            inputContainerStyle={{backgroundColor: '#ffffff', borderRadius: 20}}
+            autoCorrect={false}
           />
           <TouchableOpacity
             onPress={() => this.sorting()} 
@@ -288,7 +286,7 @@ export default class HomeScreen extends React.Component {
           </TouchableOpacity>
         </View>
 
-        <View>
+        <View style={{paddingBottom: 150}}>
           {this.renderCoinCards()}
         </View>
         </ScrollView>
@@ -356,15 +354,22 @@ HomeScreen.navigationOptions = {
 const styles = StyleSheet.create({
   contentContainer: {
     paddingTop: 30,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f8f8',
   },
   homeHeader: {
     // height: 200,
-    // backgroundColor: '#6479FF',
+    borderColor: '#f0f0f0',
+    borderWidth: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 30,
     flex: 1,
     justifyContent: 'center',
     marginBottom: 20,
-    marginTop: 30,
+    marginTop: -10,
+    paddingTop: 50,
+    marginLeft: 10,
+    marginRight: 10,
+    paddingBottom: 50,
   },
   homeHeaderTitle: {
     fontSize: 35,

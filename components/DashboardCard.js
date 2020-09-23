@@ -26,8 +26,8 @@ import CryptoChart from './CryptoChart';
 
 const { UIManager } = NativeModules;
 
-UIManager.setLayoutAnimationEnabledExperimental &&
-  UIManager.setLayoutAnimationEnabledExperimental(true);
+// UIManager.setLayoutAnimationEnabledExperimental &&
+//   UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const { width } = Dimensions.get("window");
 
@@ -43,15 +43,18 @@ export default class DashboardCard extends React.Component {
 
 render(){
 
-    var icon = images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-      ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-      : {uri: this.props.image};
+  let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
 
-    var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
-      ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
-      : '#ffffff';
+  var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    : '#ffffff';
 
-    var transparent = color + '33'
+  var transparent = color + '33'
+
+  var icon = logoExisting
+    // ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+    : {uri: this.props.image};
 
 
     var areaFill = 'rgba(207, 207, 207, 0.2)';
@@ -76,7 +79,7 @@ render(){
       />
     )
 
-    let linearGradientOffset = `${Math.abs(Math.round(this.props.percentChange))}%`
+    let linearGradientOffset = `${Math.abs(Math.round(this.props.percentChange)) > 100 ? 100 : Math.abs(Math.round(this.props.percentChange))}%`
 
     const Gradient = ({ index }) => (
       <Defs key={index}>
@@ -97,16 +100,16 @@ render(){
         <TouchableHighlight
           onPress={() => this.props.onPress()} 
           underlayColor='#ffffff'>
-          <View style={[styles.cardContainer, {width: tileDimensions.size, height: tileDimensions.size, marginHorizontal: tileDimensions.margin}]}>
+          <View style={[styles.cardContainer, {width: tileDimensions.size, height: tileDimensions.size + 2, marginHorizontal: tileDimensions.margin}]}>
 
             <View style={styles.logoNameWrapper}>
               <Image
-                style={[styles.image, {backgroundColor: color}]}
+                style={[styles.image, {backgroundColor: logoExisting ? color : null}]}
                 source={ icon }
               />
-              <View>
-                <Text style={coinSymbol}>{this.props.symbol.toUpperCase()}</Text>
-                <Text style={coinName}>{this.props.coinName}</Text>
+              <View style={{width: '60%'}}>
+                <Text style={coinSymbol} numberOfLines={1}>{this.props.symbol.toUpperCase()}</Text>
+                <Text style={coinName} numberOfLines={1}>{this.props.coinName}</Text>
               </View>
             </View>
 
@@ -171,7 +174,9 @@ const styles = StyleSheet.create({
   cardContainer: {
     position: 'relative',
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#ffffff',
+    borderColor: '#ededed',
+    borderWidth: 1,
     marginBottom: 20,
     padding: 10,
     borderRadius: 20,

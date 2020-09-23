@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardCard from '../components/DashboardCard';
 
 
-export default class HomeScreen extends React.Component {
+export default class DashboardScreen extends React.Component {
   constructor(props){
     super(props);
     this.state ={
@@ -52,20 +52,6 @@ export default class HomeScreen extends React.Component {
   }
 
 
-
-  firstTimeSetFavoriteCoins = async () => {
-    try {
-      let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
-    } catch (error) {
-      // Error retrieving data
-      try {
-        let favoriteCoins = await AsyncStorage.setItem('favoriteCoins', JSON.stringify(['bitcoin']));
-      } catch (error) {
-        // Error retrieving data
-        console.log(error.message);
-      }
-    }
-  }
 
 
 // get the coin ids for the history later
@@ -137,7 +123,6 @@ export default class HomeScreen extends React.Component {
 
   getFavoriteCoinsHistory = async () => {
     let idString = this.state.favoriteCoins.join('%2C');
-    console.log(idString)
    fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${idString}&order=market_cap_desc&per_page=100&page=1&sparkline=true`)
     .then((response) => response.json())
     .then((responseJson) => {
@@ -168,7 +153,7 @@ export default class HomeScreen extends React.Component {
 
     return favCoins.map((coin) =>
       <DashboardCard
-        index={ favCoins.map(function(coin) { return coin.name }).indexOf(coin.name) }
+        // index={ favCoins.map(function(coin) { return coin.name }).indexOf(coin.name) }
         rank={ coin.market_cap_rank }
         coinName={ coin.name }
         symbol={ coin.symbol }
@@ -187,7 +172,7 @@ export default class HomeScreen extends React.Component {
         // historyFetch={()=>this.getCryptoHistory(coin)}
         // methods
         setScroll={(bool)=>this.setScroll(bool)}
-        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.favCoins, backNavigation: 'Dashboard'} )}
+        onPress={() => this.props.navigation.navigate( 'ProfileScreen', {coin: coin, allCryptosData: this.state.favCoins, backNavigation: 'Dashboard', coinDataLoaded: true} )}
         // scrollDown={this.state.scrollDown}
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
@@ -203,7 +188,7 @@ export default class HomeScreen extends React.Component {
 
     return hotCoins.map((coin) =>
       <DashboardCard
-        index={ hotCoins.map(function(coin) { return coin.name }).indexOf(coin.name) }
+        // index={ hotCoins.map(function(coin) { return coin.name }).indexOf(coin.name) }
         rank={ this.state.sparklinesLoaded ? coin.market_cap_rank : coin.item.market_cap_rank }
         coinName={ this.state.sparklinesLoaded ? coin.name : coin.item.name }
         symbol={ this.state.sparklinesLoaded ? coin.symbol : coin.item.symbol }
@@ -262,7 +247,7 @@ export default class HomeScreen extends React.Component {
           }
         </View>
         <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>🔥 Hottest Cryptos</Text>
-        <View style={styles.homeHeader}>
+        <View style={[styles.homeHeader, {paddingBottom: 150}]}>
           { this.state.hotCoinsLoaded ?
             this.renderHotCoinCards()
             :
@@ -301,7 +286,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8',
   },
   homeHeaderTitle: {
     fontSize: 35,

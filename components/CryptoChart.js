@@ -247,7 +247,7 @@ export default class CryptoChart extends React.PureComponent {
                 <G y={ 345 }>
                   <Text
                       x={ firstDatePositionValue }
-                      dy={ 20 }
+                      dy={ 10 }
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }
                   >
@@ -256,7 +256,7 @@ export default class CryptoChart extends React.PureComponent {
                 </G>
                 <G x={ 0 }>
                     <Line
-                        y1={ 355 }
+                        y1={ 345 }
                         y2={ y(data[ xSwipe ]) }
                         stroke={ color }
                         strokeWidth={ 2 }
@@ -281,7 +281,7 @@ export default class CryptoChart extends React.PureComponent {
                 <G y={ 345 }>
                   <Text
                       x={ secondDatePositionValue }
-                      dy={ 20 }
+                      dy={ 10 }
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }
                   >
@@ -290,7 +290,7 @@ export default class CryptoChart extends React.PureComponent {
                 </G>
                 <G x={ 0 }>
                     <Line
-                        y1={ 355 }
+                        y1={ 345 }
                         y2={ y(data[ xSwipeTwo ]) }
                         stroke={ color }
                         strokeWidth={ 2 }
@@ -495,11 +495,13 @@ const styles = StyleSheet.create({
     height: 370,
     flexDirection: 'row',
     zIndex: 10,
-    marginTop: 50,
+    marginTop: 20,
     marginRight: 20,
     marginLeft: 20,
     backgroundColor: '#ffffff',
-    borderRadius: 15,
+    borderRadius: 20,
+    borderColor: '#ededed',
+    borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',
@@ -512,6 +514,6 @@ const styles = StyleSheet.create({
     height: 40,
     marginLeft: 8,
     marginRight: 8,
-    borderRadius: 10,
+    borderRadius: 15,
   },
 })

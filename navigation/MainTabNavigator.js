@@ -8,8 +8,8 @@ import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
-import LinksScreen from '../screens/LinksScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 
 
@@ -31,7 +31,7 @@ const HomeStack = createStackNavigator({
         elevation: 0,
         shadowOpacity: 0,
         borderBottomWidth: 0,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#f8f8f8',
       },
       headerTintColor: '#a1a1a1',
     }
@@ -47,7 +47,6 @@ const HomeStack = createStackNavigator({
 // SHOWING AND HIDING THE TAB BAR HERE
 HomeStack.navigationOptions = {
   tabBarLabel: 'All',
-  tabBarVisible: true, // if FALSE then hide bar, if TRUE then show bar
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
@@ -65,9 +64,9 @@ HomeStack.navigationOptions = {
 HomeStack.path = '';
 
 
-const LinksStack = createStackNavigator({
-    Links: {
-      screen: LinksScreen,
+const DashboardStack = createStackNavigator({
+    Dashboard: {
+      screen: DashboardScreen,
       navigationOptions: {
         header: null,
       },
@@ -79,7 +78,7 @@ const LinksStack = createStackNavigator({
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#f8f8f8',
         },
         headerTintColor: '#a1a1a1',
       }
@@ -89,7 +88,7 @@ const LinksStack = createStackNavigator({
 );
 
 
-LinksStack.navigationOptions = {
+DashboardStack.navigationOptions = {
   tabBarLabel: 'Dashboard',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-flame' : 'md-flame'} />
@@ -97,31 +96,72 @@ LinksStack.navigationOptions = {
 };
 
 
-LinksStack.path = '';
+DashboardStack.path = '';
 
-const SettingsStack = createStackNavigator(
-  {
-    Settings: SettingsScreen,
+const SearchStack = createStackNavigator({
+    Search: {
+      screen: SearchScreen,
+      navigationOptions: {
+        header: null,
+      },
+    },
+    ProfileScreen: {
+      screen: ProfileScreen,
+      navigationOptions: {
+        headerStyle: {
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
+          backgroundColor: '#f8f8f8',
+        },
+        headerTintColor: '#a1a1a1',
+      }
+    },
   },
   config
 );
 
 
 
-SettingsStack.navigationOptions = {
-  tabBarLabel: 'Settings',
+SearchStack.navigationOptions = {
+  tabBarLabel: 'Search',
   tabBarIcon: ({ focused }) => (
-    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-cog' : 'md-cog'} />
+    <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-search' : 'md-search'} />
   ),
 };
 
-SettingsStack.path = '';
+SearchStack.path = '';
 
 
 const tabNavigator = createBottomTabNavigator({
-  LinksStack,
+  DashboardStack,
   HomeStack,
-  SettingsStack,
+  SearchStack,
+},
+{
+  animationEnabled: true,
+  tabBarPosition: 'bottom',
+  tabBarOptions: {
+    // showLabel: false,
+    style:{
+      shadowColor: 'rgba(58,55,55,0.3)',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1,
+      shadowRadius: 15,
+      borderTopColor: 'transparent',
+      borderRadius: 20,
+      height: 60,
+      backgroundColor: '#ffffff',
+      borderTopWidth: 0,
+      position: 'absolute',
+      left: 10,
+      right: 10,
+      bottom: 10,
+    },
+    activeTabStyle: {
+      backgroundColor: 'white',
+    }
+  }
 });
 
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Image,
@@ -19,8 +18,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
-
-import { images } from '../Utils/CoinIconsColor';
+import { images } from '../Utils/CoinIcons';
+import { colors } from '../Utils/CoinColors';
 import { history } from '../Utils/HistoryHolder';
 import { renderPriceNumber, nFormatter, renderPricePrecentage } from '../Utils/Functions';
 
@@ -31,11 +30,20 @@ import CryptoChart from '../components/CryptoChart';
 
 
 
-
-
 export default class ProfileScreen extends React.Component {
 
-
+static navigationOptions = ({navigation}) => {
+      return {
+        headerLeft: () => (
+          <TouchableOpacity
+            style={{alignItems:'center',justifyContent:'center', width: 50, marginLeft: 10}}
+            onPress={() => navigation.navigate(navigation.state.params.backNavigation) }
+          >
+            <Ionicons name="ios-arrow-back" size={30} color="#a1a1a1" />
+          </TouchableOpacity>
+        ),
+      };
+  }
 
 
   constructor(props){
@@ -48,6 +56,7 @@ export default class ProfileScreen extends React.Component {
       scrollDown: 0,
       refreshing: false,
       favoriteCoinsLoaded: false,
+      coinDataLoaded: this.props.navigation.state.params.coinDataLoaded,
     }
     this.animatedScrollValue = new Animated.Value(0);
   };
@@ -67,6 +76,25 @@ export default class ProfileScreen extends React.Component {
     this.mainFetch();
     this.fetchAdditionalInfos();
     this.getFavoriteCoins();
+    if (!this.props.navigation.state.params.coinDataLoaded) {
+      this.getCoinsIfNotExisting();
+    };
+  }
+
+
+// Fetching Coin Data, if coming from the Search Screen
+  getCoinsIfNotExisting = () => {
+    fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${this.props.navigation.state.params.coin.id}&order=market_cap_desc&per_page=100&page=1&sparkline=true`)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        coinData: responseJson[0],
+        coinDataLoaded: true,
+      });
+    })
+    .catch((error) =>{
+        console.error(error);
+    });
   }
 
 
@@ -268,29 +296,41 @@ export default class ProfileScreen extends React.Component {
   }
 
 
-    handleScroll = (event: Object) => {
-      if (event.nativeEvent.contentOffset.y < 0) {
-        this.setState({scrollDown: event.nativeEvent.contentOffset.y});
-      }
-    }
+    // handleScroll = (event: Object) => {
+    //   if (event.nativeEvent.contentOffset.y < 0) {
+    //     this.setState({scrollDown: event.nativeEvent.contentOffset.y});
+    //   }
+    // }
 
 
 
 
   render() {
-    let coin = this.props.navigation.state.params.coin;
-    let allCryptosData = this.props.navigation.state.params.allCryptosData;
+
+    if (!this.state.coinDataLoaded) {
+      return(
+        <View style={{flex: 1, paddingTop: 200}}>
+          <ActivityIndicator/>
+        </View>
+      )
+    }
+
+
+
+
+    let coin = this.props.navigation.state.params.coinDataLoaded ? this.props.navigation.state.params.coin : this.state.coinData;
+    // let allCryptosData = this.props.navigation.state.params.allCryptosData;
 
 
     // select next and previous coin
-    let coinArrayIndex = allCryptosData.map(function(e) { return e.symbol; }).indexOf(coin.symbol)
+    // let coinArrayIndex = allCryptosData.map(function(e) { return e.symbol; }).indexOf(coin.symbol)
 
-    let nextCoinIndex = coinArrayIndex == allCryptosData.length - 1 ? 0 : coinArrayIndex + 1;
-    let nextCoin = allCryptosData[nextCoinIndex];
+    // let nextCoinIndex = coinArrayIndex == allCryptosData.length - 1 ? 0 : coinArrayIndex + 1;
+    // let nextCoin = allCryptosData[nextCoinIndex];
 
 
-    let prevCoinIndex = coinArrayIndex == 0 ? allCryptosData.length - 1 : coinArrayIndex - 1;
-    let prevCoin = allCryptosData[prevCoinIndex];
+    // let prevCoinIndex = coinArrayIndex == 0 ? allCryptosData.length - 1 : coinArrayIndex - 1;
+    // let prevCoin = allCryptosData[prevCoinIndex];
 
 
 
@@ -299,23 +339,36 @@ export default class ProfileScreen extends React.Component {
       coinChange = 0
     }
 
-    var icon = images[coin.symbol.toLowerCase()]
-      ? images[coin.symbol.toLowerCase()]
+
+    let logoExisting = images[coin.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
+
+    var color = colors[coin.symbol.toLowerCase().replace(/\W/, '')]
+        ? colors[coin.symbol.toLowerCase().replace(/\W/, '')]
+        : '#000000';
+
+    var transparent = color + '33'
+
+    var icon = logoExisting
+      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${coin.symbol.toLowerCase().replace(/\W/, '')}.png`}
       : {uri: coin.image};
 
-    var nextCoinIcon = images[nextCoin.symbol.toLowerCase()]
-      ? images[nextCoin.symbol.toLowerCase()]
-      : {uri: nextCoin.image};
 
-    var prevCoinIcon = images[prevCoin.symbol.toLowerCase()]
-      ? images[prevCoin.symbol.toLowerCase()]
-      : {uri: prevCoin.image};
+
+
+
+    // var nextCoinIcon = images[nextCoin.symbol.toLowerCase()]
+    //   ? images[nextCoin.symbol.toLowerCase()]
+    //   : {uri: nextCoin.image};
+
+    // var prevCoinIcon = images[prevCoin.symbol.toLowerCase()]
+    //   ? images[prevCoin.symbol.toLowerCase()]
+    //   : {uri: prevCoin.image};
 
 
     // messari data
-    let governance = 'no info';
-    let consensus = 'no info';
-    let description = 'no info';
+    let governance = '-';
+    let consensus = '-';
+    let description = '-';
 
 
     if (this.state.messariData) {
@@ -367,47 +420,43 @@ export default class ProfileScreen extends React.Component {
       <ScrollView
         scrollEnabled={this.state.allowScroll}
         style={styles.container}
-        onScroll={this.handleScroll}
-        scrollEventThrottle={16}
+        // onScroll={this.handleScroll}
+        // scrollEventThrottle={16}
         refreshControl={
-            <RefreshControl
-              refreshing={this.state.refreshing}
-              onRefresh={this._onRefresh}
-              tintColor='transparent'
-            />
-          }
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this._onRefresh}
+          />}
       >
         <View style={styles.headerWrapper}>
           <View style={styles.headerContent}>
 
             <View style={styles.imageContainer}>
-              <TouchableOpacity onPress={()=> this.props.navigation.push('ProfileScreen', {coin: prevCoin, allCryptosData: allCryptosData}) }>
-                <Image
-                  style={styles.nextImage}
-                  source={ prevCoinIcon }
-                />
-              </TouchableOpacity>
-
-              <Animated.Image
-                style={[styles.image, {
-                  transform: [{ rotateX: `${this.state.scrollDown*0.5}deg`}]
-                  }
-                ]}
+              <Image
+                style={[styles.image, {backgroundColor: logoExisting ? color : null}]}
                 source={ icon }
               />
-
-              <TouchableOpacity onPress={()=> this.props.navigation.push('ProfileScreen', {coin: nextCoin, allCryptosData: allCryptosData}) }>
-                <Image
-                  style={styles.nextImage}
-                  source={ nextCoinIcon }
-                />
-              </TouchableOpacity>
             </View>
 
-            <View style={styles.ovalShadow} />
-            <Text style={styles.nameText} >{coin.name}</Text>
+            <View style={styles.headerTextWrapper}>
+              <Text style={styles.nameText}>{coin.name}</Text>
+              <Text style={styles.symbolText}>{coin.symbol.toUpperCase()}</Text>
+            </View>
+
+            <View style={styles.starWrapper}>
+              <Ionicons
+                name={`ios-star${coinExisting ? '' : '-outline'}`}
+                size={35}
+                color={coinExisting ? "#ffe400" : "#a1a1a1"}
+                style={styles.starIcon}
+                onPress={() => { this.toggleFavoriteCoins() }}
+              />
+            </View>
+
           </View>
         </View>
+
+
         <View style={styles.coinPriceWrapper}>
 
           <Text style={styles.coinPrice}><Text style={styles.dollar}>$</Text>{
@@ -416,13 +465,8 @@ export default class ProfileScreen extends React.Component {
             :
             renderPriceNumber(coin.current_price)
           }</Text>
-          {
-            // coinChange > 0 ?
-            //   <Ionicons name="ios-arrow-up" size={32} color="#00BFA5" />
-            // :
-            //   <Ionicons name="ios-arrow-down" size={32} color="#DD2C00" />
-            }
             <Text style={this.state.tooltipValue && !this.state.tooltipChange || coinChange == 0 ? styles.coinPerceGray : coinChange < 0 ? styles.coinPerce24Minus : styles.coinPerce24Plus}>{renderPricePrecentage(coinChange)} %</Text>
+
         </View>
 
             <View>
@@ -441,118 +485,79 @@ export default class ProfileScreen extends React.Component {
 
             </View>
 
-            <View style={styles.starWrapper}>
-              <Ionicons
-                name={`ios-star${coinExisting ? '' : '-outline'}`}
-                size={35}
-                color={coinExisting ? "#ffe400" : "#a1a1a1"}
-                style={styles.starIcon}
-                onPress={() => { this.toggleFavoriteCoins() }}
-              />
-            </View>
 
-        <View>
 
-          <View style={styles.infoCards}>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-at" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+
+        <View style={styles.infoCardsWrapper}>
+
+          <View style={[styles.infoCards, styles.infoBorderBottom]}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
+                <Text style={styles.infoTitle}>SYMBOL</Text>
                 <Text style={styles.infoValue}>{coin.symbol.toUpperCase()}</Text>
-                <Text style={styles.infoTitle}>symbol</Text>
-              </View>
             </View>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-list" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
+                <Text style={styles.infoTitle}>RANK</Text>
                 <Text style={styles.infoValue}>{coin.market_cap_rank}</Text>
-                <Text style={styles.infoTitle}>rank</Text>
-              </View>
             </View>
           </View>
 
-          <View style={styles.infoCards}>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-analytics" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+          <View style={[styles.infoCards, styles.infoBorderBottom]}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
+                <Text style={styles.infoTitle}>MARKET CAP</Text>
                 <Text style={styles.infoValue}>$ {nFormatter(coin.market_cap, 2)}</Text>
-                <Text style={styles.infoTitle}>market cap</Text>
-              </View>
             </View>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-pie" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
+                <Text style={styles.infoTitle}>AVAILABLE SUPPLY</Text>
                 <Text style={styles.infoValue}>{nFormatter(coin.circulating_supply, 2)}</Text>
-                <Text style={styles.infoTitle}>available supply</Text>
-              </View>
             </View>
           </View>
 
 
 
-          <View style={styles.infoCards}>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-wallet" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+          <View style={[styles.infoCards, styles.infoBorderBottom]}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
+                <Text style={styles.infoTitle}>TOTAL SUPPLY</Text>
                 <Text style={styles.infoValue}>{nFormatter(coin.total_supply, 2)}</Text>
-                <Text style={styles.infoTitle}>total supply</Text>
-              </View>
             </View>
             {
           // messari data
             }
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-cog" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
+                <Text style={styles.infoTitle}>CONSENSUS</Text>
                 <Text style={styles.infoValue}>{consensus}</Text>
-                <Text style={styles.infoTitle}>consensus</Text>
-              </View>
+            </View>
+          </View>
+
+
+
+          <View style={[styles.infoCards, styles.infoBorderBottom]}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
+                <Text style={styles.infoTitle}>TOKEN TYPE</Text>
+                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_type : '-'}</Text>
+            </View>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
+                <Text style={styles.infoTitle}>TOKEN USAGE</Text>
+                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_usage : '-'}</Text>
             </View>
           </View>
 
 
 
           <View style={styles.infoCards}>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-cube" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
-                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_type : 'no info'}</Text>
-                <Text style={styles.infoTitle}>token type</Text>
-              </View>
-            </View>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-navigate" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
-                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.economics.token.token_usage : 'no info'}</Text>
-                <Text style={styles.infoTitle}>token usage</Text>
-              </View>
-            </View>
-          </View>
-
-
-
-          <View style={styles.infoCards}>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-git-pull-request" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
+                <Text style={styles.infoTitle}>GOVERNANCE</Text>
                 <Text style={styles.infoValue}>{governance}</Text>
-                <Text style={styles.infoTitle}>governance</Text>
-              </View>
             </View>
-            <View style={styles.infoBlockWrapper}>
-              <Ionicons name="ios-apps" size={35} color="#3a3a3a" style={styles.infoIcon} />
-              <View style={{width: '80%', marginLeft: 15}}>
-                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overview.category : 'no info'}</Text>
-                <Text style={styles.infoTitle}>category</Text>
-              </View>
+            <View style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
+                <Text style={styles.infoTitle}>CATEGORY</Text>
+                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overview.category : '-'}</Text>
             </View>
           </View>
-
+        </View>
 
           <View style={styles.coinDescription}>
             <Text style={{fontSize: 20, fontFamily: 'nunito'}}>{description}</Text>
           </View>
-
-        </View>
 
       </ScrollView>
     )
@@ -613,70 +618,60 @@ function addTimeToWeekArray(arrayPrices) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
-  },
-  imageContainer: {
-    flex: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    width: '100%',
-  },
-  image: {
-    width: 60,
-    height: 60,
-    borderRadius: 60,
-  },
-  nextImage: {
-    width: 50,
-    height: 50,
-    opacity: 0.3,
-    borderRadius: 60,
-  },
-  imageShadow: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#f37f16',
-    borderRadius: 30,
-    position: 'absolute',
-    zIndex: -1,
-    top: 38,
-    right: 174
-  },
-  ovalShadow: {
-    marginTop: 8,
-    width: 10,
-    height: 10,
-    borderRadius: 50,
-    backgroundColor: '#e6e6e6',
-    transform: [
-      {scaleX: 5}
-    ]
+    backgroundColor: '#f8f8f8',
   },
   headerWrapper: {
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     flexDirection:'row',
-    height: 200,
+    height: 120,
+    marginTop: 20,
   },
   headerContent: {
-    width: '100%',
-    height: '100%',
+    flex: 1,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  imageContainer: {
+    width: '30%',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextWrapper: {
+    width: '50%',
+  },
+  starWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    width: '20%',
+  },
+  starIcon: {
+  },
+  image: {
+    width: 60,
+    height: 60,
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: '#f8f8f8',
+  },
   nameText: {
     fontSize: 25,
-    marginTop: 10,
     fontFamily: 'nunito',
   },
+  symbolText: {
+    fontSize: 25,
+    fontFamily: 'nunito',
+    color: '#626262',
+  },
   coinPriceWrapper: {
-    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
   coinPrice: {
-    fontSize: 55,
+    fontSize: 45,
     fontFamily: 'nunito',
   },
   dollar: {
@@ -685,19 +680,19 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito',
   },
   coinPerce24Plus: {
-    fontSize: 38,
+    fontSize: 35,
     marginTop: 10,
     color: "#00BFA5",
     fontFamily: 'nunito',
   },
   coinPerce24Minus: {
-    fontSize: 38,
+    fontSize: 35,
     marginTop: 10,
     color: "#DD2C00",
     fontFamily: 'nunito',
   },
   coinPerceGray: {
-    fontSize: 38,
+    fontSize: 35,
     marginTop: 10,
     color: "#c9c9c9",
     fontFamily: 'nunito',
@@ -705,57 +700,74 @@ const styles = StyleSheet.create({
   selected: {
     color: '#fc0018',
   },
-  starWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    width: '100%',
-  },
-  starIcon: {
-  },
-  infoCards: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 70,
-    paddingTop: 10,
+  infoCardsWrapper: {
     paddingRight: 10,
-    paddingBottom: 10,
     paddingLeft: 10,
     backgroundColor: '#ffffff',
+    marginTop: 0,
     margin: 10,
-    borderRadius: 10,
+    borderRadius: 20,
+    borderColor: '#ededed',
+    borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',
     // shadowOffset: { height: 5, width: 3 },
   },
+  infoCards: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 70,
+    paddingTop: 5,
+    paddingBottom: 5,
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  infoBorderBottom: {
+    borderBottomColor: '#e3e3e3',
+    borderBottomWidth: 0.5,
+  },
   infoBlockWrapper: {
     width: '50%',
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginRight: -10,
+    marginLeft: -10,
+  },
+  infoBlockFirst: {
+    marginRight: 10,
+  },
+  infoBlockFirst: {
+    marginRight: 10,
+  },
+  infoBlockSecond: {
+    marginLeft: 10,
   },
   infoTitle: {
     textAlign: 'left',
     fontSize: 15,
-    color: '#5c5c5c',
+    color: '#515151',
     fontFamily: 'nunito',
+    width: '45%',
   },
   infoValue: {
-    fontSize: 23,
-    width: '80%',
+    fontSize: 20,
+    // width: '80%',
     color: '#000000',
     textAlignVertical: 'center',
+    textAlign: 'right',
     fontWeight: 'bold',
     fontFamily: 'nunito',
+    width: '55%',
   },
-  infoIcon: {
-    width: '20%',
-    textAlign: 'center',
-    textAlignVertical: 'center',
-  },
+  // infoIcon: {
+  //   width: '20%',
+  //   textAlign: 'center',
+  //   textAlignVertical: 'center',
+  // },
   coinDescription: {
     flex: 1,
     flexDirection: 'row',
@@ -767,12 +779,14 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     backgroundColor: '#ffffff',
     margin: 10,
-    borderRadius: 10,
+    borderRadius: 20,
+    borderColor: '#f0f0f0',
+    borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',
     // shadowOffset: { height: 5, width: 3 },
-    marginBottom: 80,
+    marginBottom: 150,
   },
 })
 

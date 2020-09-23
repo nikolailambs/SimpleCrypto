@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -73,16 +74,20 @@ render(){
   //     this.getCryptoHistory()
   //   }
   // }
-
-  var icon = images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    : {uri: this.props.image};
+  let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
 
   var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     : '#ffffff';
 
   var transparent = color + '33'
+
+  var icon = logoExisting
+    // ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+    : {uri: this.props.image};
+
+
 
 
   var areaFill = 'rgba(207, 207, 207, 0.2)';
@@ -109,9 +114,7 @@ render(){
   )
 
 
-  let linearGradientOffset = `${Math.abs(this.props.percentChange - this.props.percentChange*0.3)}%`;
-  console.log(linearGradientOffset)
-  // console.log(linearGradientOffset)
+  let linearGradientOffset = `${Math.abs(Math.round(this.props.percentChange)) > 100 ? 100 : Math.abs(Math.round(this.props.percentChange))}%`
 
   const Gradient = ({ index }) => (
     <Defs key={index}>
@@ -133,12 +136,12 @@ render(){
 
           <View style={{flex: 1, flexDirection: 'row'}}>
             <Image
-              style={[styles.image, {backgroundColor: color}]}
+              style={[styles.image, {backgroundColor: logoExisting ? color : null}]}
               source={ icon }
             />
-            <View>
-              <Text style={coinSymbol}>{this.props.symbol.toUpperCase()}</Text>
-              <Text style={coinName}>{this.props.coinName}</Text>
+            <View style={{width: '75%'}}>
+              <Text style={coinSymbol} numberOfLines={1}>{this.props.symbol.toUpperCase()}</Text>
+              <Text style={coinName} numberOfLines={1}>{this.props.coinName}</Text>
             </View>
           </View>
 
@@ -203,12 +206,14 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: 'space-between',
-    // backgroundColor: '#000000',
+    backgroundColor: '#ffffff',
     marginBottom: 20,
     padding: 10,
     marginLeft: 10,
     marginRight: 10,
-    // borderRadius: 8,
+    borderRadius: 20,
+    borderColor: '#ededed',
+    borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',
@@ -268,7 +273,7 @@ const styles = StyleSheet.create({
     height: 45,
     borderRadius: 150 / 2,
     borderWidth: 1,
-    borderColor: '#ffffff'
+    borderColor: '#ffffff',
   },
   moneySymbol: {
     fontWeight: 'normal',

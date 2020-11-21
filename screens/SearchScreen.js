@@ -194,7 +194,7 @@ export default class SearchScreen extends React.Component {
           </TouchableOpacity>
         </View>
         <View style={{paddingBottom: 150}}>
-          {this.state.searchData ?
+          {this.state.search.length > 2 ?
             this.renderCoinCards()
             :
             this.state.randCoinsLoaded ?

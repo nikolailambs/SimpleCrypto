@@ -49,6 +49,10 @@ export default class DashboardScreen extends React.Component {
     // this.firstTimeSetFavoriteCoins();
     this.getHotCoins();
     this.getFavoriteCoins();
+    this.timer = setInterval(()=> {
+      this.getFavoriteCoinsHistory();
+      this.getCryptoHistory();
+    }, 60000)
   }
 
 
@@ -181,7 +185,7 @@ export default class DashboardScreen extends React.Component {
     )
   }
 
-
+uni = 4.8100
 
   renderHotCoinCards() {
     const hotCoins = this.state.hotCoins;
@@ -223,6 +227,7 @@ export default class DashboardScreen extends React.Component {
     return (
       <ScrollView
         style={styles.container}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={this.state.refreshing}
@@ -290,7 +295,7 @@ const styles = StyleSheet.create({
   },
   homeHeaderTitle: {
     fontSize: 35,
-    marginBottom: 10,
+    // marginBottom: 10,
     color: '#232323',
     textAlign: 'center',
     fontFamily: 'nunito',

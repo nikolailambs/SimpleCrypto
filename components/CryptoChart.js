@@ -35,15 +35,16 @@ export default class CryptoChart extends React.PureComponent {
         // what is happening!
         // gestureState.d{x,y} will be set to zero PushNotificationIOS.=(NewData, NoData, ResultFailed, }, static, (, :)
 
-        console.log('Start of touch');
-        this.long_press_timeout = setTimeout(function(){
-          console.log('___');
-          console.log('___');
-          console.log('long touch');
-          console.log('___');
-          console.log('___');
-        },
-        1000);
+
+        // console.log('Start of touch');
+        // this.long_press_timeout = setTimeout(() => {
+        //   console.log('___');
+        //   console.log('___');
+        //   console.log('long touch');
+        //   console.log('___');
+        //   console.log('___');
+        // },
+        // 500);
 
 
         this.props.setScroll(false) // disable scroll

@@ -74,9 +74,11 @@ render(){
   //     this.getCryptoHistory()
   //   }
   // }
+
+
   let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
 
-  var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+  var color = logoExisting
     ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     : '#ffffff';
 
@@ -87,6 +89,12 @@ render(){
     ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
     : {uri: this.props.image};
 
+
+  if (logoExisting == 'not transparent') {
+    icon = logoExisting
+    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+    : {uri: this.props.image};
+  }
 
 
 
@@ -131,6 +139,7 @@ render(){
     // const { rank, symbol, coinName, price, percent_change_1h, percentChange, percent_change_7d, onPress } = this.props
       <TouchableHighlight
         onPress={() => this.props.onPress()} 
+        style={{borderRadius: 20}}
         underlayColor='#f4f4f4'>
         <View style={cardContainer}>
 
@@ -207,10 +216,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
-    marginBottom: 20,
+    margin: 10,
     padding: 10,
-    marginLeft: 10,
-    marginRight: 10,
     borderRadius: 20,
     borderColor: '#ededed',
     borderWidth: 1,

@@ -59,7 +59,7 @@ export default class HomeScreen extends React.Component {
   this.globalStats();
   this.getSparkLines();
   // funktioniert:
-  // this.timer = setInterval(()=> this.getSparkLines(), 5000)
+  this.timer = setInterval(()=> this.getSparkLines(), 60000)
  }
 
 
@@ -102,6 +102,7 @@ export default class HomeScreen extends React.Component {
 
 
   async getSparkLines(){
+    console.log('tick')
    fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=true')
     .then((response) => response.json())
     .then((responseJson) => {

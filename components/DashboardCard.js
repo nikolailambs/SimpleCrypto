@@ -43,7 +43,7 @@ export default class DashboardCard extends React.Component {
 
 render(){
 
-  let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
+  let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? images[this.props.symbol.toLowerCase().replace(/\W/, '')] : false;
 
   var color = colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
@@ -52,9 +52,16 @@ render(){
   var transparent = color + '33'
 
   var icon = logoExisting
-    // ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
     ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
     : {uri: this.props.image};
+
+
+  if (logoExisting == 'not transparent') {
+    icon = logoExisting
+      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+      : {uri: this.props.image};
+  }
+
 
 
     var areaFill = 'rgba(207, 207, 207, 0.2)';
@@ -99,7 +106,8 @@ render(){
       // const { rank, symbol, coinName, price, percent_change_1h, percentChange, percent_change_7d, onPress } = this.props
         <TouchableHighlight
           onPress={() => this.props.onPress()} 
-          underlayColor='#ffffff'>
+          style={{borderRadius: 20}}
+          underlayColor='#f4f4f4'>
           <View style={[styles.cardContainer, {width: tileDimensions.size, height: tileDimensions.size + 2, marginHorizontal: tileDimensions.margin}]}>
 
             <View style={styles.logoNameWrapper}>
@@ -177,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderColor: '#ededed',
     borderWidth: 1,
-    marginBottom: 20,
+    margin: 10,
     padding: 10,
     borderRadius: 20,
     alignSelf: "flex-start",

@@ -340,7 +340,7 @@ static navigationOptions = ({navigation}) => {
     }
 
 
-    let logoExisting = images[coin.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
+    let logoExisting = images[coin.symbol.toLowerCase().replace(/\W/, '')] ? images[coin.symbol.toLowerCase().replace(/\W/, '')] : false;
 
     var color = colors[coin.symbol.toLowerCase().replace(/\W/, '')]
         ? colors[coin.symbol.toLowerCase().replace(/\W/, '')]
@@ -353,16 +353,13 @@ static navigationOptions = ({navigation}) => {
       : {uri: coin.image};
 
 
+    if (logoExisting == 'not transparent') {
+      icon = logoExisting
+      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${coin.symbol.toLowerCase().replace(/\W/, '')}.png`}
+      : {uri: this.props.image};
+    }
 
 
-
-    // var nextCoinIcon = images[nextCoin.symbol.toLowerCase()]
-    //   ? images[nextCoin.symbol.toLowerCase()]
-    //   : {uri: nextCoin.image};
-
-    // var prevCoinIcon = images[prevCoin.symbol.toLowerCase()]
-    //   ? images[prevCoin.symbol.toLowerCase()]
-    //   : {uri: prevCoin.image};
 
 
     // messari data
@@ -420,6 +417,7 @@ static navigationOptions = ({navigation}) => {
       <ScrollView
         scrollEnabled={this.state.allowScroll}
         style={styles.container}
+        showsVerticalScrollIndicator={false}
         // onScroll={this.handleScroll}
         // scrollEventThrottle={16}
         refreshControl={
